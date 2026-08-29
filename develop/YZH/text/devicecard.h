@@ -35,6 +35,7 @@ public:
     void setOutput(int count);
     void setSelected(bool selected);
     void setFlash(bool on);         // 告警闪烁开关（由主窗口定时器驱动）
+    void setCompact(bool compact);  // 小屏紧凑模式：固定小字号、信息完整排布
 
     int deviceId() const { return m_id; }
 
@@ -48,6 +49,7 @@ protected:
 private:
     QColor stateColor() const;
     QString stateText() const;
+    void paintCompact(QPainter &p, const QRectF &rc);   // 小屏专用绘制
 
     int     m_id;
     QString m_name;
@@ -56,6 +58,7 @@ private:
     int     m_output;
     bool    m_selected;
     bool    m_flash;
+    bool    m_compact;
 };
 
 #endif // DEVICECARD_H

@@ -81,7 +81,7 @@ void StatCard::paintEvent(QPaintEvent *event)
 
     // 标题（小字）
     QFont f = font();
-    f.setPixelSize(qMax(6, int(10 * s)));
+    f.setPixelSize(qMax(7, int(10 * s)));
     p.setFont(f);
     p.setPen(QColor("#8fa3b8"));
     p.drawText(QRectF(rc.left() + 16 * s, rc.top() + 7 * s,
@@ -89,7 +89,7 @@ void StatCard::paintEvent(QPaintEvent *event)
                Qt::AlignVCenter | Qt::AlignLeft, m_title);
 
     // 数值（大字）
-    f.setPixelSize(qMax(9, int(19 * s)));
+    f.setPixelSize(qMax(10, int(19 * s)));
     f.setBold(true);
     p.setFont(f);
     p.setPen(m_valueColor);
@@ -276,7 +276,7 @@ void MainWindow::buildUi()
         const QList<StatCard *> cards = { m_cardTotal, m_cardOnline, m_cardRun,
                                           m_cardAlarm, m_cardOutput, m_cardTemp };
         for (int i = 0; i < cards.size(); ++i)
-            cards.at(i)->setMinimumSize(56, 38);
+            cards.at(i)->setMinimumSize(56, 36);
     }
 
     statRow->addWidget(m_cardTotal);
@@ -301,8 +301,10 @@ void MainWindow::buildUi()
     for (int i = 0; i < 8; ++i) {
         // 先创建占位卡片，真实数据在 onTick() 首帧填充
         DeviceCard *card = new DeviceCard;
-        if (m_compact)
-            card->setMinimumSize(64, 46);       // 小屏放开卡片最小尺寸限制
+        if (m_compact) {
+            card->setCompact(true);             // 小屏：信息完整的小字号布局
+            card->setMinimumSize(72, 56);
+        }
         connect(card, SIGNAL(clicked(int)), this, SLOT(onDeviceClicked(int)));
         m_cards.insert(i + 101, card);
         grid->addWidget(card, i / 4, i % 4);
@@ -311,8 +313,8 @@ void MainWindow::buildUi()
 
     // ---- 右：实时告警面板 ----
     QWidget *alarmPanel = makePanel("alarmPanel");
-    alarmPanel->setMinimumWidth(m_compact ? 130 : 270);
-    alarmPanel->setMaximumWidth(m_compact ? 150 : 320);
+    alarmPanel->setMinimumWidth(m_compact ? 120 : 270);
+    alarmPanel->setMaximumWidth(m_compact ? 140 : 320);
     QVBoxLayout *ab = new QVBoxLayout(alarmPanel);
     ab->setContentsMargins(m_compact ? 6 : 10, m_compact ? 5 : 8,
                            m_compact ? 6 : 10, m_compact ? 6 : 10);
@@ -342,16 +344,20 @@ void MainWindow::buildUi()
 
     // ================= 4. 底部：趋势曲线 =================
     m_chart = new TrendChart;
-    m_chart->setMinimumHeight(m_compact ? 60 : 150);
+    m_chart->setMinimumHeight(m_compact ? 56 : 150);
     root->addWidget(m_chart, 1);
 
     // ================= 5. 状态栏 =================
     statusBar()->setStyleSheet(
         "QStatusBar { background: #0e1620; color: #5a6b7d; font-size: 10px; }"
         "QStatusBar::item { border: none; }");
-    statusBar()->showMessage(m_compact
-        ? QString::fromUtf8("模拟数据模式 | 上报周期 1s")
-        : QString::fromUtf8("就绪 | 模拟数据模式（阶段2）| 上报周期 1s | 心跳超时判定 15s"));
+    if (m_compact) {
+        // 小屏：隐藏状态栏，把宝贵的竖向空间让给设备卡片
+        statusBar()->hide();
+    } else {
+        statusBar()->showMessage(
+            QString::fromUtf8("就绪 | 模拟数据模式（阶段2）| 上报周期 1s | 心跳超时判定 15s"));
+    }
 }
 
 // ===========================================================================
