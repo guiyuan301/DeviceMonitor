@@ -737,7 +737,18 @@ debug/mainwindow.o: ../mainwindow.cpp ../mainwindow.h \
 		../../../../Qt/5.9.8/mingw53_32/include/QtGui/qpainter.h \
 		../../../../Qt/5.9.8/mingw53_32/include/QtGui/qtextoption.h \
 		../../../../Qt/5.9.8/mingw53_32/include/QtGui/qpen.h \
-		../../../../Qt/5.9.8/mingw53_32/include/QtGui/QFontMetrics
+		../../../../Qt/5.9.8/mingw53_32/include/QtGui/QFontMetrics \
+		../../../../Qt/5.9.8/mingw53_32/include/QtWidgets/QStatusBar \
+		../../../../Qt/5.9.8/mingw53_32/include/QtWidgets/qstatusbar.h \
+		../../../../Qt/5.9.8/mingw53_32/include/QtGui/QGuiApplication \
+		../../../../Qt/5.9.8/mingw53_32/include/QtGui/QScreen \
+		../../../../Qt/5.9.8/mingw53_32/include/QtGui/qscreen.h \
+		../../../../Qt/5.9.8/mingw53_32/include/QtCore/QList \
+		../../../../Qt/5.9.8/mingw53_32/include/QtCore/QObject \
+		../../../../Qt/5.9.8/mingw53_32/include/QtCore/QRect \
+		../../../../Qt/5.9.8/mingw53_32/include/QtCore/QSize \
+		../../../../Qt/5.9.8/mingw53_32/include/QtCore/QSizeF \
+		../../../../Qt/5.9.8/mingw53_32/include/QtGui/QTransform
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\mainwindow.o ..\mainwindow.cpp
 
 debug/devicecard.o: ../devicecard.cpp ../devicecard.h \

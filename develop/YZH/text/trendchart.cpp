@@ -53,8 +53,14 @@ void TrendChart::paintEvent(QPaintEvent *event)
     p.setBrush(Qt::NoBrush);
     p.drawRoundedRect(panel.adjusted(0.5, 0.5, -0.5, -0.5), 8, 8);
 
+    // ---- 自适应边距：小屏（480x272）下整体收紧 ----
+    const int mL = qBound(24, int(panel.width() * 0.075), 46);
+    const int mT = qBound(16, int(panel.height() * 0.20), 36);
+    const int mR = qBound(8, int(panel.width() * 0.035), 16);
+    const int mB = qBound(12, int(panel.height() * 0.16), 26);
+
     // 绘图区（留出坐标轴和标题空间）
-    QRectF plot = panel.adjusted(44, 34, -14, -24);
+    QRectF plot = panel.adjusted(mL, mT, -mR, -mB);
     drawFrame(p, plot);
     drawGrid(p, plot);
     drawThreshold(p, plot);
@@ -71,13 +77,15 @@ void TrendChart::drawFrame(QPainter &p, const QRectF &plot)
 
 void TrendChart::drawGrid(QPainter &p, const QRectF &plot)
 {
+    // 自适应：高度不足时减少网格线数量、缩小刻度字体
+    const int lines = plot.height() < 75 ? 2 : 4;
+
     QFont f = font();
-    f.setPixelSize(9);
+    f.setPixelSize(qBound(6, int(plot.height() * 0.09), 10));
     p.setFont(f);
     p.setPen(QColor("#5a6b7d"));
 
-    // 横向网格：从 yMin 到 yMax 画 5 条，右侧标注刻度值
-    const int lines = 4;
+    // 横向网格：从 yMin 到 yMax，右侧标注刻度值
     for (int i = 0; i <= lines; ++i) {
         double v = m_yMin + (m_yMax - m_yMin) * i / lines;
         double y = plot.bottom() - plot.height() * i / lines;
@@ -92,11 +100,13 @@ void TrendChart::drawGrid(QPainter &p, const QRectF &plot)
     }
 
     // X 轴时间提示：曲线窗口约 120 秒（1 秒 1 个采样点）
-    p.drawText(QRectF(plot.left(), plot.bottom() + 3, 60, 14),
+    f.setPixelSize(qBound(6, int(plot.height() * 0.085), 9));
+    p.setFont(f);
+    p.drawText(QRectF(plot.left(), plot.bottom() + 2, 60, 13),
                Qt::AlignLeft, QString::fromUtf8("-2min"));
-    p.drawText(QRectF(plot.center().x() - 30, plot.bottom() + 3, 60, 14),
+    p.drawText(QRectF(plot.center().x() - 30, plot.bottom() + 2, 60, 13),
                Qt::AlignCenter, QString::fromUtf8("-1min"));
-    p.drawText(QRectF(plot.right() - 60, plot.bottom() + 3, 60, 14),
+    p.drawText(QRectF(plot.right() - 60, plot.bottom() + 2, 60, 13),
                Qt::AlignRight, QString::fromUtf8("现在"));
 }
 
@@ -110,7 +120,7 @@ void TrendChart::drawThreshold(QPainter &p, const QRectF &plot)
     p.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y));
 
     QFont f = font();
-    f.setPixelSize(9);
+    f.setPixelSize(qBound(6, int(plot.height() * 0.09), 10));
     p.setFont(f);
     p.setPen(QColor("#e74c3c"));
     p.drawText(QRectF(plot.left() + 4, y - 14, 90, 12),
@@ -167,12 +177,15 @@ void TrendChart::drawSeries(QPainter &p, const QRectF &plot)
 
 void TrendChart::drawHeader(QPainter &p)
 {
+    // 自适应：标题和当前值字体随控件高度缩放
     QFont f = font();
-    f.setPixelSize(12);
+    f.setPixelSize(qBound(8, int(height() * 0.11), 13));
     f.setBold(true);
     p.setFont(f);
 
-    QRectF head = rect().adjusted(12, 8, -12, 0);
+    const int padL = qBound(6, int(width() * 0.012), 12);
+    const int padT = qBound(4, int(height() * 0.03), 8);
+    QRectF head = rect().adjusted(padL, padT, -padL, 0);
     head.setHeight(20);
 
     if (m_deviceId < 0) {
@@ -191,7 +204,7 @@ void TrendChart::drawHeader(QPainter &p)
     if (!s.isEmpty()) {
         double v = s.last();
         QColor c = (v >= m_threshold) ? QColor("#ff5252") : QColor("#00c8d7");
-        f.setPixelSize(14);
+        f.setPixelSize(qBound(9, int(height() * 0.13), 15));
         f.setBold(true);
         p.setFont(f);
         QString val = QString::number(v, 'f', 1) + QString::fromUtf8(" ℃");

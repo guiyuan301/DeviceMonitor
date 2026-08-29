@@ -12,6 +12,8 @@
 #include <QPainter>
 #include <QFontMetrics>
 #include <QStatusBar>
+#include <QGuiApplication>
+#include <QScreen>
 
 // ===========================================================================
 // StatCard：顶部总览统计卡片
@@ -54,6 +56,9 @@ void StatCard::paintEvent(QPaintEvent *event)
 
     const QRectF rc = rect().adjusted(1, 1, -2, -2);
 
+    // ---- 自适应缩放：以 120x62 的"标准卡片"为基准，小屏等比缩小 ----
+    const double s = qBound(0.45, qMin(rc.width() / 120.0, rc.height() / 62.0), 1.3);
+
     // 底板：告警计数 > 0 时卡片底色微微泛红 + 闪烁边框
     QColor bg("#16202c");
     QColor border("#263445");
@@ -71,22 +76,25 @@ void StatCard::paintEvent(QPaintEvent *event)
     // 左侧竖向强调条（不同卡片不同主题色，区分指标类型）
     p.setPen(Qt::NoPen);
     p.setBrush(m_accent);
-    p.drawRoundedRect(QRectF(rc.left() + 6, rc.top() + 10, 3, rc.height() - 20), 1.5, 1.5);
+    p.drawRoundedRect(QRectF(rc.left() + 6 * s, rc.top() + 10 * s,
+                             3 * s, rc.height() - 20 * s), 1.5, 1.5);
 
     // 标题（小字）
     QFont f = font();
-    f.setPixelSize(10);
+    f.setPixelSize(qMax(7, int(10 * s)));
     p.setFont(f);
     p.setPen(QColor("#8fa3b8"));
-    p.drawText(QRectF(rc.left() + 16, rc.top() + 8, rc.width() - 20, 14),
+    p.drawText(QRectF(rc.left() + 16 * s, rc.top() + 7 * s,
+                      rc.width() - 20 * s, 14 * s),
                Qt::AlignVCenter | Qt::AlignLeft, m_title);
 
     // 数值（大字）
-    f.setPixelSize(19);
+    f.setPixelSize(qMax(10, int(19 * s)));
     f.setBold(true);
     p.setFont(f);
     p.setPen(m_valueColor);
-    p.drawText(QRectF(rc.left() + 16, rc.top() + 22, rc.width() - 22, rc.height() - 26),
+    p.drawText(QRectF(rc.left() + 16 * s, rc.top() + 21 * s,
+                      rc.width() - 22 * s, rc.height() - 25 * s),
                Qt::AlignVCenter | Qt::AlignLeft, m_value);
 }
 
@@ -107,11 +115,22 @@ MainWindow::MainWindow(QWidget *parent)
     , m_linkLabel(0)
     , m_alarmBadge(0)
     , m_selectedId(-1)
-    , m_flashOn(false)
+    , m_compact(false)
 {
     setWindowTitle(QString::fromUtf8("车间设备数据采集与可视化监控系统"));
     resize(1080, 660);
     setMinimumSize(860, 560);
+
+    // ---- 小屏自适应：板载 480x272 屏自动切紧凑模式（无边框全屏） ----
+    //     桌面调试可加 --compact 参数强制预览小屏效果
+    const QRect screen = QGuiApplication::primaryScreen()->geometry();
+    const bool forceCompact = QCoreApplication::arguments().contains("--compact");
+    if (screen.width() <= 700 || screen.height() <= 350 || forceCompact) {
+        m_compact = true;
+        setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
+        setMinimumSize(0, 0);
+        resize(forceCompact ? QSize(480, 272) : screen.size());
+    }
 
     applyGlobalStyle();
     buildUi();
@@ -196,29 +215,36 @@ void MainWindow::buildUi()
     setCentralWidget(central);
 
     QVBoxLayout *root = new QVBoxLayout(central);
-    root->setContentsMargins(10, 8, 10, 8);
-    root->setSpacing(8);
+    root->setContentsMargins(m_compact ? 4 : 10, m_compact ? 4 : 8,
+                             m_compact ? 4 : 10, m_compact ? 4 : 8);
+    root->setSpacing(m_compact ? 4 : 8);
 
     // ================= 1. 顶栏 =================
     QWidget *header = new QWidget;
-    header->setFixedHeight(40);
+    header->setFixedHeight(m_compact ? 22 : 40);
     header->setStyleSheet(
         "background: #121a25; border: 1px solid #263445; border-radius: 8px;");
     QHBoxLayout *hb = new QHBoxLayout(header);
-    hb->setContentsMargins(14, 4, 14, 4);
+    hb->setContentsMargins(14, 2, 14, 2);
     hb->setSpacing(8);
 
     QLabel *logo = new QLabel(QChar(0x25CF));   // 圆点当 logo 装饰
-    logo->setStyleSheet("color: #2ecc71; font-size: 14px;");
-    QLabel *title = new QLabel(QString::fromUtf8("车间设备数据采集与可视化监控系统"));
-    title->setStyleSheet("color: #e8f0f8; font-size: 15px; font-weight: bold; border: none;");
+    logo->setStyleSheet(m_compact ? "color: #2ecc71; font-size: 10px;"
+                                  : "color: #2ecc71; font-size: 14px;");
+    QLabel *title = new QLabel(QString::fromUtf8("车间设备监控系统"));
+    title->setStyleSheet(m_compact
+        ? "color: #e8f0f8; font-size: 11px; font-weight: bold; border: none;"
+        : "color: #e8f0f8; font-size: 15px; font-weight: bold; border: none;");
     QLabel *sub = new QLabel(QString::fromUtf8("中央板 · 中央监控大屏"));
     sub->setStyleSheet("color: #5a6b7d; font-size: 10px; border: none;");
+    sub->setVisible(!m_compact);                // 小屏隐藏副标题，省空间
 
     m_linkLabel = new QLabel;
-    m_linkLabel->setStyleSheet("color: #2ecc71; font-size: 11px; border: none;");
+    m_linkLabel->setStyleSheet(m_compact ? "color: #2ecc71; font-size: 9px; border: none;"
+                                         : "color: #2ecc71; font-size: 11px; border: none;");
     m_timeLabel = new QLabel;
-    m_timeLabel->setStyleSheet("color: #8fa3b8; font-size: 11px; border: none;");
+    m_timeLabel->setStyleSheet(m_compact ? "color: #8fa3b8; font-size: 9px; border: none;"
+                                         : "color: #8fa3b8; font-size: 11px; border: none;");
 
     hb->addWidget(logo);
     hb->addWidget(title);
@@ -230,7 +256,7 @@ void MainWindow::buildUi()
 
     // ================= 2. 总览统计卡片 =================
     QHBoxLayout *statRow = new QHBoxLayout;
-    statRow->setSpacing(8);
+    statRow->setSpacing(m_compact ? 4 : 8);
     m_cardTotal  = new StatCard(QString::fromUtf8("设备总数"));
     m_cardOnline = new StatCard(QString::fromUtf8("在线设备"));
     m_cardRun    = new StatCard(QString::fromUtf8("运行中"));
@@ -245,6 +271,14 @@ void MainWindow::buildUi()
     m_cardOutput->setAccent(QColor("#9b59b6"));
     m_cardTemp->setAccent(QColor("#f39c12"));
 
+    if (m_compact) {
+        // 小屏：放开最小尺寸限制，让 6 张卡片挤进一行
+        const QList<StatCard *> cards = { m_cardTotal, m_cardOnline, m_cardRun,
+                                          m_cardAlarm, m_cardOutput, m_cardTemp };
+        for (int i = 0; i < cards.size(); ++i)
+            cards.at(i)->setMinimumSize(56, 36);
+    }
+
     statRow->addWidget(m_cardTotal);
     statRow->addWidget(m_cardOnline);
     statRow->addWidget(m_cardRun);
@@ -255,17 +289,22 @@ void MainWindow::buildUi()
 
     // ================= 3. 中部：设备网格 + 告警列表 =================
     QHBoxLayout *mid = new QHBoxLayout;
-    mid->setSpacing(8);
+    mid->setSpacing(m_compact ? 4 : 8);
 
     // ---- 左：8 台设备卡片（4 列 x 2 行） ----
     QWidget *gridPanel = makePanel("gridPanel");
     QGridLayout *grid = new QGridLayout(gridPanel);
-    grid->setContentsMargins(8, 8, 8, 8);
-    grid->setSpacing(8);
+    grid->setContentsMargins(m_compact ? 4 : 8, m_compact ? 4 : 8,
+                             m_compact ? 4 : 8, m_compact ? 4 : 8);
+    grid->setSpacing(m_compact ? 4 : 8);
 
     for (int i = 0; i < 8; ++i) {
         // 先创建占位卡片，真实数据在 onTick() 首帧填充
         DeviceCard *card = new DeviceCard;
+        if (m_compact) {
+            card->setCompact(true);             // 小屏：信息完整的小字号布局
+            card->setMinimumSize(72, 56);
+        }
         connect(card, SIGNAL(clicked(int)), this, SLOT(onDeviceClicked(int)));
         m_cards.insert(i + 101, card);
         grid->addWidget(card, i / 4, i % 4);
@@ -274,11 +313,12 @@ void MainWindow::buildUi()
 
     // ---- 右：实时告警面板 ----
     QWidget *alarmPanel = makePanel("alarmPanel");
-    alarmPanel->setMinimumWidth(270);
-    alarmPanel->setMaximumWidth(320);
+    alarmPanel->setMinimumWidth(m_compact ? 120 : 270);
+    alarmPanel->setMaximumWidth(m_compact ? 140 : 320);
     QVBoxLayout *ab = new QVBoxLayout(alarmPanel);
-    ab->setContentsMargins(10, 8, 10, 10);
-    ab->setSpacing(6);
+    ab->setContentsMargins(m_compact ? 6 : 10, m_compact ? 5 : 8,
+                           m_compact ? 6 : 10, m_compact ? 6 : 10);
+    ab->setSpacing(m_compact ? 3 : 6);
 
     QHBoxLayout *alarmHead = new QHBoxLayout;
     QLabel *alarmTitle = new QLabel(QString::fromUtf8("实时告警"));
@@ -296,7 +336,7 @@ void MainWindow::buildUi()
     m_alarmList = new QListWidget;
     m_alarmList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     m_alarmList->setSelectionMode(QAbstractItemView::NoSelection);
-    m_alarmList->setStyleSheet("font-size: 11px;");
+    m_alarmList->setStyleSheet(m_compact ? "font-size: 9px;" : "font-size: 11px;");
     ab->addWidget(m_alarmList, 1);
     mid->addWidget(alarmPanel, 1);
 
@@ -304,14 +344,20 @@ void MainWindow::buildUi()
 
     // ================= 4. 底部：趋势曲线 =================
     m_chart = new TrendChart;
+    m_chart->setMinimumHeight(m_compact ? 56 : 150);
     root->addWidget(m_chart, 1);
 
     // ================= 5. 状态栏 =================
     statusBar()->setStyleSheet(
         "QStatusBar { background: #0e1620; color: #5a6b7d; font-size: 10px; }"
         "QStatusBar::item { border: none; }");
-    statusBar()->showMessage(
-        QString::fromUtf8("就绪 | 模拟数据模式（阶段2）| 上报周期 1s | 心跳超时判定 15s"));
+    if (m_compact) {
+        // 小屏：隐藏状态栏，把宝贵的竖向空间让给设备卡片
+        statusBar()->hide();
+    } else {
+        statusBar()->showMessage(
+            QString::fromUtf8("就绪 | 模拟数据模式（阶段2）| 上报周期 1s | 心跳超时判定 15s"));
+    }
 }
 
 // ===========================================================================
@@ -412,10 +458,15 @@ void MainWindow::onTick()
     else if (avgTemp >= 70.0) avgColor = QColor("#ffa726");
     m_cardTemp->setValueText(QString::number(avgTemp, 'f', 1) + QString::fromUtf8(" ℃"), avgColor);
 
-    // ---- 顶栏时间 / 连接状态 ----
-    m_timeLabel->setText(QDateTime::currentDateTime().toString(
-        QString::fromUtf8("yyyy-MM-dd hh:mm:ss")));
-    m_linkLabel->setText(QString::fromUtf8("● 服务器 192.168.1.100:8888 已连接"));
+    // ---- 顶栏时间 / 连接状态（小屏用短文案，防挤出屏幕） ----
+    if (m_compact) {
+        m_timeLabel->setText(QDateTime::currentDateTime().toString("MM-dd hh:mm"));
+        m_linkLabel->setText(QString::fromUtf8("● 已连接"));
+    } else {
+        m_timeLabel->setText(QDateTime::currentDateTime().toString(
+            QString::fromUtf8("yyyy-MM-dd hh:mm:ss")));
+        m_linkLabel->setText(QString::fromUtf8("● 服务器 192.168.1.100:8888 已连接"));
+    }
 }
 
 void MainWindow::onFlash()
