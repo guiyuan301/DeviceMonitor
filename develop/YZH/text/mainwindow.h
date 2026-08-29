@@ -99,6 +99,7 @@ private:
     QLabel *m_linkLabel;
     QLabel *m_alarmBadge;
     int     m_selectedId;
+    bool    m_compact;      // 小屏紧凑模式（480x272 等，自动检测）
 
     // ---------- 定时器 ----------
     QTimer m_tickTimer;     // 数据周期（对齐协议 1s 上报节奏）
