@@ -17,15 +17,9 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     devicecard.cpp \
-    trendchart.cpp \
-    db/sqlite3.c \
-    db/storage.c \
-    db/alarm.c \
+    trendchart.cpp 
 
 HEADERS += \
     mainwindow.h \
     devicecard.h \
-    trendchart.h \
-    db/sqlite3.h \
-    db/storage.h \
-    db/alarm.h
+    trendchart.h 
