@@ -14,7 +14,7 @@
 HistoryPage::HistoryPage(QWidget *parent) : QWidget(parent)
 {
     // ---- 查询条件行 ----
-    QLabel *l1 = new QLabel("设备");
+    QLabel *l1 = new QLabel("采集点");
     m_devCombo = new QComboBox;
     const QList<int> ids = DataManager::instance().deviceIds();
     for (int id : ids)
@@ -43,16 +43,18 @@ HistoryPage::HistoryPage(QWidget *parent) : QWidget(parent)
     ctrl->addStretch();
     ctrl->addWidget(m_info);
 
-    // ---- 曲线 ----
+    // ---- 温湿度双曲线 ----
     m_chart = new TrendChart;
-    m_chart->setTitle("历史温度曲线 (°C)");
-    m_chart->setYRange(20, 90);
+    m_chart->setTitle("历史温湿度曲线");
+    m_chart->setYRange(0, 100);
     m_chart->setAutoRangeX();
-    m_chart->addSeries("温度", QColor(0x00, 0xc8, 0x96));
+    m_chart->addSeries("温度°C", QColor(0x00, 0xa8, 0xff));
+    m_chart->addSeries("湿度%", QColor(0x00, 0xc8, 0x96));
 
     // ---- 记录表格 ----
     m_table = new QTableWidget(0, 4);
-    m_table->setHorizontalHeaderLabels(QStringList() << "时间" << "温度(°C)" << "状态" << "产量(件)");
+    m_table->setHorizontalHeaderLabels(QStringList()
+        << "时间" << "温度(°C)" << "湿度(%RH)" << "产量(件)");
     m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     for (int c = 1; c < 4; ++c)
         m_table->horizontalHeader()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
@@ -86,11 +88,14 @@ void HistoryPage::onQuery()
     const int minutes = m_minutes->value();
     const QVector<Sample> data = DataManager::instance().recentHistory(id, minutes * 60);
 
-    QVector<QPointF> pts;
-    for (int i = 0; i < data.size(); ++i)
-        pts.append(QPointF(data.at(i).t, data.at(i).temp));
-    m_chart->setSeriesData(0, pts);
-    m_chart->setTitle(QString("%1 · 最近 %2 分钟温度曲线")
+    QVector<QPointF> ptsT, ptsH;
+    for (int i = 0; i < data.size(); ++i) {
+        ptsT.append(QPointF(data.at(i).t, data.at(i).temp));
+        ptsH.append(QPointF(data.at(i).t, data.at(i).humi));
+    }
+    m_chart->setSeriesData(0, ptsT);
+    m_chart->setSeriesData(1, ptsH);
+    m_chart->setTitle(QString("%1 · 最近 %2 分钟温湿度曲线")
                       .arg(DataManager::instance().deviceName(id)).arg(minutes));
 
     // 表格: 最新在前, 最多 60 行
@@ -101,7 +106,7 @@ void HistoryPage::onQuery()
         m_table->setItem(i, 0, new QTableWidgetItem(
             QDateTime::fromMSecsSinceEpoch(s.t).toString("MM-dd hh:mm:ss")));
         m_table->setItem(i, 1, new QTableWidgetItem(QString::number(s.temp, 'f', 1)));
-        m_table->setItem(i, 2, new QTableWidgetItem(s.status ? "运行" : "停机"));
+        m_table->setItem(i, 2, new QTableWidgetItem(QString::number(s.humi, 'f', 0)));
         m_table->setItem(i, 3, new QTableWidgetItem(QString::number(s.output)));
     }
     m_info->setText(QString("共 %1 条记录").arg(data.size()));

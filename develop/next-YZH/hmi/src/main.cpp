@@ -49,6 +49,12 @@ QPushButton#queryBtn { background:#0a6d99; border:1px solid #0a86bd; border-radi
     padding:2px 10px; font-size:10px; color:#eaf6ff; }
 QPushButton#queryBtn:hover  { background:#0a86bd; }
 QPushButton#queryBtn:pressed { background:#085a80; }
+QPushButton#chartBtn { background:#1b2733; color:#7c8d9c; border:1px solid #2b3a48;
+    border-radius:2px; padding:1px 8px; font-size:9px; }
+QPushButton#chartBtn:hover { color:#aebdca; }
+QPushButton#chartBtn:checked { color:#00a8ff; border:1px solid #00a8ff; }
+QPushButton#chartBtn:disabled { color:#4a5560; border-color:#24313d; }
+QLabel#snapThumb { background:#10161d; border:1px solid #2b3a48; }
 
 QTableWidget { background:#121920; alternate-background-color:#16202a; gridline-color:#22303c;
     border:1px solid #2b3a48; font-size:9px;

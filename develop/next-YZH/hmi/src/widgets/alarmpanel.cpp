@@ -38,9 +38,9 @@ QWidget *AlarmPanel::makeRow(const AlarmItem &item)
 
     const QString t = QDateTime::fromMSecsSinceEpoch(item.raised).toString("MM-dd hh:mm:ss");
     QLabel *lb = new QLabel(QString(
-        "<b style='color:%1'>[%2]</b> <span style='color:#d8e2ea;'>%3</span><br>"
-        "<span style='color:#7c8d9c;'>%4</span>")
-        .arg(c.name(), lvlName, item.deviceName + " " + item.message, t));
+        "<b style='color:%1'>[%2·%3]</b> <span style='color:#d8e2ea;'>%4 %5</span><br>"
+        "<span style='color:#7c8d9c;'>%6</span>")
+        .arg(c.name(), alarmTypeName(item.type), lvlName, item.deviceName, item.message, t));
     lb->setWordWrap(true);
     lb->setStyleSheet(QString(
         "background:#131c25; border-left:2px solid %1; padding:2px 4px;").arg(c.name()));
@@ -53,6 +53,12 @@ void AlarmPanel::setAlarms(const QList<AlarmItem> &items)
         if (it->widget())
             it->widget()->deleteLater();
         delete it;
+    }
+    if (items.isEmpty()) {
+        QLabel *empty = new QLabel("暂无告警 · 系统运行正常");
+        empty->setAlignment(Qt::AlignCenter);
+        empty->setStyleSheet("color:#4a5a68; font-size:9px; padding:6px 2px;");
+        m_layout->addWidget(empty, 0, Qt::AlignTop);
     }
     for (int i = 0; i < items.size(); ++i)
         m_layout->addWidget(makeRow(items.at(i)), 0, Qt::AlignTop);

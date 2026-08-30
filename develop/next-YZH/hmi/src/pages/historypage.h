@@ -9,9 +9,9 @@ class TrendChart;
 class QTableWidget;
 
 /*
- * 历史回查页: 选设备 + 时间范围 → 曲线回放 + 记录表格。
+ * 历史回查页 V2: 选采集点 + 时间范围 → 温湿度双曲线回放 + 记录表格。
  * 当前数据来自 DataManager 内存环形缓冲; 接 SQLite 后换用
- * 成员 D 的历史查询接口即可, 界面不变。
+ * 历史查询接口即可, 界面不变。
  */
 class HistoryPage : public QWidget
 {

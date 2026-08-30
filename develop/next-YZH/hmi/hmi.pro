@@ -23,8 +23,10 @@ SOURCES += \
     src/widgets/overviewcard.cpp \
     src/widgets/devicelist.cpp \
     src/widgets/alarmpanel.cpp \
+    src/widgets/videowidget.cpp \
     src/pages/dashboardpage.cpp \
     src/pages/historypage.cpp \
+    src/pages/videopage.cpp \
     src/pages/recordspage.cpp
 
 HEADERS += \
@@ -37,6 +39,8 @@ HEADERS += \
     src/widgets/overviewcard.h \
     src/widgets/devicelist.h \
     src/widgets/alarmpanel.h \
+    src/widgets/videowidget.h \
     src/pages/dashboardpage.h \
     src/pages/historypage.h \
+    src/pages/videopage.h \
     src/pages/recordspage.h

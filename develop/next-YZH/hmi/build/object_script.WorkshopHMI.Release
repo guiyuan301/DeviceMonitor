@@ -7,8 +7,10 @@ INPUT(
 ./release/overviewcard.o
 ./release/devicelist.o
 ./release/alarmpanel.o
+./release/videowidget.o
 ./release/dashboardpage.o
 ./release/historypage.o
+./release/videopage.o
 ./release/recordspage.o
 ./release/moc_mainwindow.o
 ./release/moc_datamanager.o
@@ -17,7 +19,9 @@ INPUT(
 ./release/moc_overviewcard.o
 ./release/moc_devicelist.o
 ./release/moc_alarmpanel.o
+./release/moc_videowidget.o
 ./release/moc_dashboardpage.o
 ./release/moc_historypage.o
+./release/moc_videopage.o
 ./release/moc_recordspage.o
 );

@@ -4,6 +4,7 @@
 #include "core/datasimulator.h"
 #include "pages/dashboardpage.h"
 #include "pages/historypage.h"
+#include "pages/videopage.h"
 #include "pages/recordspage.h"
 #include <QLabel>
 #include <QPushButton>
@@ -20,14 +21,11 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     setWindowTitle("车间设备集中监控系统");
     setFixedSize(480, 272);
 
-    // ---- 数据设备注册 (先于页面创建, 页面依赖设备清单) ----
+    // ---- 数据采集点注册 (先于页面创建; 4板部署: 1中央板 + 3采集板) ----
     QList<QPair<int, QString> > devs;
-    devs << qMakePair(1, QStringLiteral("注塑机A"))
-         << qMakePair(2, QStringLiteral("注塑机B"))
-         << qMakePair(3, QStringLiteral("数控车床C"))
-         << qMakePair(4, QStringLiteral("空压机D"))
-         << qMakePair(5, QStringLiteral("烘干炉E"))
-         << qMakePair(6, QStringLiteral("包装线F"));
+    devs << qMakePair(1, QStringLiteral("车间A"))
+         << qMakePair(2, QStringLiteral("车间B"))
+         << qMakePair(3, QStringLiteral("仓库C"));
     DataManager::instance().initDevices(devs);
 
     // ---- 顶栏 ----
@@ -66,7 +64,8 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     m_stack = new QStackedWidget;
     m_stack->addWidget(new DashboardPage);  // 0 实时看板
     m_stack->addWidget(new HistoryPage);    // 1 历史回查
-    m_stack->addWidget(new RecordsPage);    // 2 告警记录
+    m_stack->addWidget(new VideoPage);      // 2 视频监控
+    m_stack->addWidget(new RecordsPage);    // 3 告警记录
 
     // ---- 底部导航 ----
     QFrame *navBar = new QFrame;
@@ -75,9 +74,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 
     QPushButton *btnDash = new QPushButton("实时看板");
     QPushButton *btnHist = new QPushButton("历史回查");
+    QPushButton *btnVideo = new QPushButton("视频监控");
     QPushButton *btnAlarm = new QPushButton("告警记录");
     QList<QPushButton *> navs;
-    navs << btnDash << btnHist << btnAlarm;
+    navs << btnDash << btnHist << btnVideo << btnAlarm;
     for (int i = 0; i < navs.size(); ++i) {
         navs.at(i)->setObjectName("navBtn");
         navs.at(i)->setCheckable(true);
@@ -111,6 +111,9 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     m_sim = new DataSimulator(this);
     connect(m_sim, &DataSimulator::deviceData,
             &DataManager::instance(), &DataManager::onDeviceData);
+    // 抓拍请求: 真实系统改为 connect 到 server_send_cmd(devid, 0x04手动抓拍)
+    connect(&DataManager::instance(), &DataManager::snapshotRequested,
+            m_sim, &DataSimulator::onSnapshotRequested);
     m_sim->start(1000);
 
     QTimer *clockTimer = new QTimer(this);

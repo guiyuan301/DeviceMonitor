@@ -36,22 +36,28 @@ void DeviceList::addDevice(int id, const QString &name)
     tf.setBold(true);
     temp->setFont(tf);
 
+    QLabel *humi = new QLabel("--", frame);
+    QFont hf = humi->font();
+    hf.setPixelSize(9);
+    humi->setFont(hf);
+
     QHBoxLayout *hl = new QHBoxLayout(frame);
     hl->setContentsMargins(5, 0, 5, 0);
-    hl->setSpacing(4);
+    hl->setSpacing(3);
     hl->addWidget(led);
     hl->addWidget(nameL);
     hl->addStretch();
     hl->addWidget(temp);
+    hl->addWidget(humi);
 
     Row r;
     r.frame = frame;
     r.led = led;
     r.name = nameL;
     r.temp = temp;
+    r.humi = humi;
     m_rows.insert(id, r);
 
-    // 插入到末尾 stretch 之前, 保持添加顺序
     QVBoxLayout *lay = qobject_cast<QVBoxLayout *>(layout());
     lay->insertWidget(lay->count() - 1, frame, 0, Qt::AlignTop);
     applyRowStyle(id);
@@ -64,8 +70,13 @@ void DeviceList::updateDevice(const DeviceData &d)
     Row &r = m_rows[d.id];
     r.online = d.online;
     r.alarm = d.alarmLevel > 0;
-    r.running = d.runStatus != 0;
-    r.temp->setText(d.online ? QString::number(d.temp, 'f', 1) + "°C" : "--");
+    if (d.online) {
+        r.temp->setText(QString::number(d.temp, 'f', 1) + "°C");
+        r.humi->setText(QString::number(d.humi, 'f', 0) + "%");
+    } else {
+        r.temp->setText("--");
+        r.humi->setText("--");
+    }
     applyRowStyle(d.id);
 }
 
@@ -79,10 +90,8 @@ void DeviceList::applyRowStyle(int id)
         ledColor = Theme::Offline.name();
     else if (r.alarm)
         ledColor = m_blink ? "transparent" : Theme::Danger.name();
-    else if (r.running)
-        ledColor = Theme::Ok.name();
     else
-        ledColor = "#5a6b7a";
+        ledColor = Theme::Ok.name();
 
     r.frame->setStyleSheet(QString(
         "QFrame { background:%1; border:1px solid %2; border-radius:2px; }")
@@ -94,6 +103,7 @@ void DeviceList::applyRowStyle(int id)
     r.temp->setStyleSheet(QString("color:%1;").arg(
         r.alarm ? Theme::Danger.name()
                 : (r.online ? Theme::Text.name() : Theme::Dim.name())));
+    r.humi->setStyleSheet(QString("color:%1;").arg(Theme::Dim.name()));
 }
 
 void DeviceList::setSelected(int id)

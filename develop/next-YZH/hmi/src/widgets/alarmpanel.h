@@ -5,7 +5,7 @@
 
 class QVBoxLayout;
 
-// 实时告警滚动列表: 每条两行(级别+设备+描述 / 时间), 新告警置顶
+// 实时告警滚动列表: 每条两行(类型级别+设备描述 / 时间), 新告警置顶
 class AlarmPanel : public QWidget
 {
     Q_OBJECT

@@ -7,8 +7,8 @@ class QLabel;
 class QFrame;
 
 /*
- * 设备状态列表: LED 状态灯 + 设备名 + 实时温度, 点击行选中设备,
- * 告警设备的 LED 随 setBlink() 闪烁。
+ * 设备状态列表 V2: LED 状态灯 + 点名 + 温度 + 湿度,
+ * 点击行选中, 告警设备 LED 闪烁, 离线灰显。
  */
 class DeviceList : public QWidget
 {
@@ -33,9 +33,9 @@ private:
         QLabel *led = nullptr;
         QLabel *name = nullptr;
         QLabel *temp = nullptr;
+        QLabel *humi = nullptr;
         bool online = false;
         bool alarm = false;
-        bool running = false;
     };
     void applyRowStyle(int id);
 
