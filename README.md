@@ -1,7 +1,9 @@
-<img width="1280" height="720" alt="0a58518f1bdd4280621b08790411d07e_720" src="https://github.com/user-attachments/assets/fef36a50-a6d8-4143-b84b-4c291647fafe" />
+
+
+https://github.com/user-attachments/assets/815dc51f-02b4-4d6d-8cd8-312e3cac390b
+
+
 启动客服端 需要先运行.sh脚本(避免无法使用触摸屏)
-cat > /root/run_hmi.sh << 'EOF'
-#!/bin/sh
 
 
 直接运行一下脚本即可 
