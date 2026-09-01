@@ -11,13 +11,13 @@ MAKEFILE      = Makefile.Debug
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DUNICODE -D_UNICODE -DWIN32 -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_NEEDS_QMAIN
+DEFINES       = -DUNICODE -D_UNICODE -DWIN32 -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB -DQT_NEEDS_QMAIN
 CFLAGS        = -fno-keep-inline-dllexport -g -Wall -W -Wextra $(DEFINES)
 CXXFLAGS      = -fno-keep-inline-dllexport -g -std=gnu++11 -Wall -W -Wextra -fexceptions -mthreads $(DEFINES)
-INCPATH       = -I. -IXS_\db -I..\..\..\qt\5.9.8\mingw53_32\include -I..\..\..\qt\5.9.8\mingw53_32\include\QtWidgets -I..\..\..\qt\5.9.8\mingw53_32\include\QtGui -I..\..\..\qt\5.9.8\mingw53_32\include\QtANGLE -I..\..\..\qt\5.9.8\mingw53_32\include\QtCore -Idebug -I..\..\..\qt\5.9.8\mingw53_32\mkspecs\win32-g++ 
+INCPATH       = -I. -IXS_\db -I..\..\..\qt\5.9.8\mingw53_32\include -I..\..\..\qt\5.9.8\mingw53_32\include\QtWidgets -I..\..\..\qt\5.9.8\mingw53_32\include\QtGui -I..\..\..\qt\5.9.8\mingw53_32\include\QtANGLE -I..\..\..\qt\5.9.8\mingw53_32\include\QtNetwork -I..\..\..\qt\5.9.8\mingw53_32\include\QtCore -Idebug -I..\..\..\qt\5.9.8\mingw53_32\mkspecs\win32-g++ 
 LINKER      =        g++
 LFLAGS        =        -Wl,-subsystem,windows -mthreads
-LIBS        =        -lmingw32 -LD:\qt\5.9.8\mingw53_32\lib D:\qt\5.9.8\mingw53_32\lib\libqtmaind.a -LC:\openssl\lib -LC:\Utils\my_sql\my_sql\lib -LC:\Utils\postgresql\pgsql\lib -lshell32 D:\qt\5.9.8\mingw53_32\lib\libQt5Widgetsd.a D:\qt\5.9.8\mingw53_32\lib\libQt5Guid.a D:\qt\5.9.8\mingw53_32\lib\libQt5Cored.a 
+LIBS        =        -lmingw32 -LD:\qt\5.9.8\mingw53_32\lib D:\qt\5.9.8\mingw53_32\lib\libqtmaind.a -LC:\openssl\lib -LC:\Utils\my_sql\my_sql\lib -LC:\Utils\postgresql\pgsql\lib -lshell32 D:\qt\5.9.8\mingw53_32\lib\libQt5Widgetsd.a D:\qt\5.9.8\mingw53_32\lib\libQt5Guid.a D:\qt\5.9.8\mingw53_32\lib\libQt5Networkd.a D:\qt\5.9.8\mingw53_32\lib\libQt5Cored.a 
 QMAKE         = D:\qt\5.9.8\mingw53_32\bin\qmake.exe
 IDC           = idc
 IDL           = midl
@@ -49,6 +49,7 @@ SOURCES       = src\main.cpp \
 		src\mainwindow.cpp \
 		src\core\datamanager.cpp \
 		src\core\datasimulator.cpp \
+		src\core\serverclient.cpp \
 		src\core\dbbridge.cpp \
 		src\widgets\trendchart.cpp \
 		src\widgets\overviewcard.cpp \
@@ -64,6 +65,7 @@ SOURCES       = src\main.cpp \
 		XS_\db\alarm.c debug\moc_mainwindow.cpp \
 		debug\moc_datamanager.cpp \
 		debug\moc_datasimulator.cpp \
+		debug\moc_serverclient.cpp \
 		debug\moc_dbbridge.cpp \
 		debug\moc_trendchart.cpp \
 		debug\moc_overviewcard.cpp \
@@ -78,6 +80,7 @@ OBJECTS       = debug/main.o \
 		debug/mainwindow.o \
 		debug/datamanager.o \
 		debug/datasimulator.o \
+		debug/serverclient.o \
 		debug/dbbridge.o \
 		debug/trendchart.o \
 		debug/overviewcard.o \
@@ -94,6 +97,7 @@ OBJECTS       = debug/main.o \
 		debug/moc_mainwindow.o \
 		debug/moc_datamanager.o \
 		debug/moc_datasimulator.o \
+		debug/moc_serverclient.o \
 		debug/moc_dbbridge.o \
 		debug/moc_trendchart.o \
 		debug/moc_overviewcard.o \
@@ -110,6 +114,7 @@ DIST          =  src\mainwindow.h \
 		src\theme.h \
 		src\core\datamanager.h \
 		src\core\datasimulator.h \
+		src\core\serverclient.h \
 		src\core\dbbridge.h \
 		src\widgets\trendchart.h \
 		src\widgets\overviewcard.h \
@@ -126,6 +131,7 @@ DIST          =  src\mainwindow.h \
 		src\mainwindow.cpp \
 		src\core\datamanager.cpp \
 		src\core\datasimulator.cpp \
+		src\core\serverclient.cpp \
 		src\core\dbbridge.cpp \
 		src\widgets\trendchart.cpp \
 		src\widgets\overviewcard.cpp \
@@ -158,10 +164,10 @@ qmake: FORCE
 qmake_all: FORCE
 
 dist:
-	$(ZIP) WorkshopHMI.zip $(SOURCES) $(DIST) hmi.pro ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\spec_pre.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\qdevice.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\device_config.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\sanitize.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\gcc-base.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\g++-base.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\angle.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\qconfig.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3danimation.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3danimation_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dcore.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dcore_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dextras.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dextras_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dinput.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dinput_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dlogic.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dlogic_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquick.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquick_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickanimation.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickanimation_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickextras.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickextras_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickinput.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickinput_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickrender.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickrender_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickscene2d.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickscene2d_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3drender.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3drender_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_accessibility_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axbase.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axbase_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axcontainer.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axcontainer_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axserver.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axserver_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_bluetooth.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_bluetooth_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_bootstrap_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_concurrent.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_concurrent_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_core.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_core_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_dbus.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_dbus_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_designer.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_designer_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_designercomponents_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_devicediscovery_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_egl_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_eventdispatcher_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_fb_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_fontdatabase_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gamepad.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gamepad_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gui.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gui_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_help.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_help_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_location.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_location_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimedia.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimedia_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimediawidgets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimediawidgets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_network.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_network_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_nfc.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_nfc_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_opengl.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_opengl_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_openglextensions.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_openglextensions_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_packetprotocol_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_platformcompositor_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_positioning.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_positioning_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_printsupport.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_printsupport_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qml.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qml_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmldebug_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmldevtools_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmltest.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmltest_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qtmultimediaquicktools_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quick.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quick_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickcontrols2.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickcontrols2_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickparticles_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quicktemplates2_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickwidgets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickwidgets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_scxml.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_scxml_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sensors.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sensors_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialbus.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialbus_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialport.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialport_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sql.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sql_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_svg.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_svg_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_testlib.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_testlib_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_theme_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_uiplugin.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_uitools.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_uitools_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_webchannel.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_webchannel_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_websockets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_websockets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_widgets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_widgets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_winextras.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_winextras_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xml.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xml_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xmlpatterns.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xmlpatterns_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qt_functions.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qt_config.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\win32-g++\qmake.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\spec_post.prf .qmake.stash ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\exclusive_builds.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\toolchain.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\default_pre.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\win32\default_pre.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\resolve_config.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\exclusive_builds_post.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\default_post.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\build_pass.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qml_debug.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\precompile_header.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\warn_on.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qt.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\resources.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\moc.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\win32\opengl.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\uic.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qmake_use.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\file_copies.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\win32\windows.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\testcase_targets.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\exceptions.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\yacc.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\lex.prf hmi.pro ..\..\..\qt\5.9.8\mingw53_32\lib\qtmaind.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Widgetsd.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Guid.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Cored.prl    ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\data\dummy.cpp src\mainwindow.h src\datatypes.h src\theme.h src\core\datamanager.h src\core\datasimulator.h src\core\dbbridge.h src\widgets\trendchart.h src\widgets\overviewcard.h src\widgets\devicelist.h src\widgets\alarmpanel.h src\widgets\videowidget.h src\pages\dashboardpage.h src\pages\historypage.h src\pages\videopage.h src\pages\recordspage.h XS_\db\sqlite3.h XS_\db\storage.h XS_\db\alarm.h src\main.cpp src\mainwindow.cpp src\core\datamanager.cpp src\core\datasimulator.cpp src\core\dbbridge.cpp src\widgets\trendchart.cpp src\widgets\overviewcard.cpp src\widgets\devicelist.cpp src\widgets\alarmpanel.cpp src\widgets\videowidget.cpp src\pages\dashboardpage.cpp src\pages\historypage.cpp src\pages\videopage.cpp src\pages\recordspage.cpp XS_\db\sqlite3.c XS_\db\storage.c XS_\db\alarm.c     
+	$(ZIP) WorkshopHMI.zip $(SOURCES) $(DIST) hmi.pro ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\spec_pre.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\qdevice.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\device_config.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\sanitize.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\gcc-base.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\g++-base.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\common\angle.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\qconfig.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3danimation.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3danimation_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dcore.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dcore_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dextras.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dextras_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dinput.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dinput_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dlogic.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dlogic_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquick.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquick_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickanimation.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickanimation_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickextras.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickextras_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickinput.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickinput_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickrender.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickrender_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickscene2d.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3dquickscene2d_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3drender.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_3drender_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_accessibility_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axbase.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axbase_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axcontainer.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axcontainer_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axserver.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_axserver_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_bluetooth.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_bluetooth_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_bootstrap_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_concurrent.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_concurrent_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_core.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_core_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_dbus.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_dbus_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_designer.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_designer_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_designercomponents_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_devicediscovery_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_egl_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_eventdispatcher_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_fb_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_fontdatabase_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gamepad.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gamepad_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gui.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_gui_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_help.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_help_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_location.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_location_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimedia.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimedia_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimediawidgets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_multimediawidgets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_network.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_network_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_nfc.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_nfc_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_opengl.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_opengl_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_openglextensions.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_openglextensions_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_packetprotocol_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_platformcompositor_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_positioning.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_positioning_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_printsupport.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_printsupport_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qml.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qml_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmldebug_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmldevtools_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmltest.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qmltest_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_qtmultimediaquicktools_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quick.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quick_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickcontrols2.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickcontrols2_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickparticles_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quicktemplates2_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickwidgets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_quickwidgets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_scxml.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_scxml_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sensors.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sensors_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialbus.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialbus_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialport.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_serialport_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sql.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_sql_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_svg.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_svg_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_testlib.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_testlib_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_theme_support_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_uiplugin.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_uitools.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_uitools_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_webchannel.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_webchannel_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_websockets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_websockets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_widgets.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_widgets_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_winextras.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_winextras_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xml.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xml_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xmlpatterns.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\modules\qt_lib_xmlpatterns_private.pri ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qt_functions.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qt_config.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\win32-g++\qmake.conf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\spec_post.prf .qmake.stash ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\exclusive_builds.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\toolchain.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\default_pre.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\win32\default_pre.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\resolve_config.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\exclusive_builds_post.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\default_post.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\build_pass.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qml_debug.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\precompile_header.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\warn_on.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qt.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\resources.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\moc.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\win32\opengl.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\uic.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\qmake_use.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\file_copies.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\win32\windows.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\testcase_targets.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\exceptions.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\yacc.prf ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\lex.prf hmi.pro ..\..\..\qt\5.9.8\mingw53_32\lib\qtmaind.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Widgetsd.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Guid.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Networkd.prl ..\..\..\qt\5.9.8\mingw53_32\lib\Qt5Cored.prl    ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\data\dummy.cpp src\mainwindow.h src\datatypes.h src\theme.h src\core\datamanager.h src\core\datasimulator.h src\core\serverclient.h src\core\dbbridge.h src\widgets\trendchart.h src\widgets\overviewcard.h src\widgets\devicelist.h src\widgets\alarmpanel.h src\widgets\videowidget.h src\pages\dashboardpage.h src\pages\historypage.h src\pages\videopage.h src\pages\recordspage.h XS_\db\sqlite3.h XS_\db\storage.h XS_\db\alarm.h src\main.cpp src\mainwindow.cpp src\core\datamanager.cpp src\core\datasimulator.cpp src\core\serverclient.cpp src\core\dbbridge.cpp src\widgets\trendchart.cpp src\widgets\overviewcard.cpp src\widgets\devicelist.cpp src\widgets\alarmpanel.cpp src\widgets\videowidget.cpp src\pages\dashboardpage.cpp src\pages\historypage.cpp src\pages\videopage.cpp src\pages\recordspage.cpp XS_\db\sqlite3.c XS_\db\storage.c XS_\db\alarm.c     
 
 clean: compiler_clean 
-	-$(DEL_FILE) debug\main.o debug\mainwindow.o debug\datamanager.o debug\datasimulator.o debug\dbbridge.o debug\trendchart.o debug\overviewcard.o debug\devicelist.o debug\alarmpanel.o debug\videowidget.o debug\dashboardpage.o debug\historypage.o debug\videopage.o debug\recordspage.o debug\sqlite3.o debug\storage.o debug\alarm.o debug\moc_mainwindow.o debug\moc_datamanager.o debug\moc_datasimulator.o debug\moc_dbbridge.o debug\moc_trendchart.o debug\moc_overviewcard.o debug\moc_devicelist.o debug\moc_alarmpanel.o debug\moc_videowidget.o debug\moc_dashboardpage.o debug\moc_historypage.o debug\moc_videopage.o debug\moc_recordspage.o
+	-$(DEL_FILE) debug\main.o debug\mainwindow.o debug\datamanager.o debug\datasimulator.o debug\serverclient.o debug\dbbridge.o debug\trendchart.o debug\overviewcard.o debug\devicelist.o debug\alarmpanel.o debug\videowidget.o debug\dashboardpage.o debug\historypage.o debug\videopage.o debug\recordspage.o debug\sqlite3.o debug\storage.o debug\alarm.o debug\moc_mainwindow.o debug\moc_datamanager.o debug\moc_datasimulator.o debug\moc_serverclient.o debug\moc_dbbridge.o debug\moc_trendchart.o debug\moc_overviewcard.o debug\moc_devicelist.o debug\moc_alarmpanel.o debug\moc_videowidget.o debug\moc_dashboardpage.o debug\moc_historypage.o debug\moc_videopage.o debug\moc_recordspage.o
 
 distclean: clean 
 	-$(DEL_FILE) .qmake.stash
@@ -186,9 +192,9 @@ compiler_moc_predefs_clean:
 debug/moc_predefs.h: ../../../qt/5.9.8/mingw53_32/mkspecs/features/data/dummy.cpp
 	g++ -fno-keep-inline-dllexport -g -std=gnu++11 -Wall -W -Wextra -dM -E -o debug\moc_predefs.h ..\..\..\qt\5.9.8\mingw53_32\mkspecs\features\data\dummy.cpp
 
-compiler_moc_header_make_all: debug/moc_mainwindow.cpp debug/moc_datamanager.cpp debug/moc_datasimulator.cpp debug/moc_dbbridge.cpp debug/moc_trendchart.cpp debug/moc_overviewcard.cpp debug/moc_devicelist.cpp debug/moc_alarmpanel.cpp debug/moc_videowidget.cpp debug/moc_dashboardpage.cpp debug/moc_historypage.cpp debug/moc_videopage.cpp debug/moc_recordspage.cpp
+compiler_moc_header_make_all: debug/moc_mainwindow.cpp debug/moc_datamanager.cpp debug/moc_datasimulator.cpp debug/moc_serverclient.cpp debug/moc_dbbridge.cpp debug/moc_trendchart.cpp debug/moc_overviewcard.cpp debug/moc_devicelist.cpp debug/moc_alarmpanel.cpp debug/moc_videowidget.cpp debug/moc_dashboardpage.cpp debug/moc_historypage.cpp debug/moc_videopage.cpp debug/moc_recordspage.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) debug\moc_mainwindow.cpp debug\moc_datamanager.cpp debug\moc_datasimulator.cpp debug\moc_dbbridge.cpp debug\moc_trendchart.cpp debug\moc_overviewcard.cpp debug\moc_devicelist.cpp debug\moc_alarmpanel.cpp debug\moc_videowidget.cpp debug\moc_dashboardpage.cpp debug\moc_historypage.cpp debug\moc_videopage.cpp debug\moc_recordspage.cpp
+	-$(DEL_FILE) debug\moc_mainwindow.cpp debug\moc_datamanager.cpp debug\moc_datasimulator.cpp debug\moc_serverclient.cpp debug\moc_dbbridge.cpp debug\moc_trendchart.cpp debug\moc_overviewcard.cpp debug\moc_devicelist.cpp debug\moc_alarmpanel.cpp debug\moc_videowidget.cpp debug\moc_dashboardpage.cpp debug\moc_historypage.cpp debug\moc_videopage.cpp debug\moc_recordspage.cpp
 debug/moc_mainwindow.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qtwidgetsglobal.h \
@@ -292,7 +298,7 @@ debug/moc_mainwindow.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget
 		src/mainwindow.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\mainwindow.h -o debug\moc_mainwindow.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\mainwindow.h -o debug\moc_mainwindow.cpp
 
 debug/moc_datamanager.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject.h \
@@ -382,7 +388,7 @@ debug/moc_datamanager.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
 		src/core/datamanager.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\datamanager.h -o debug\moc_datamanager.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\datamanager.h -o debug\moc_datamanager.cpp
 
 debug/moc_datasimulator.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject.h \
@@ -443,7 +449,84 @@ debug/moc_datasimulator.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject
 		src/core/datasimulator.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\datasimulator.h -o debug\moc_datasimulator.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\datasimulator.h -o debug\moc_datasimulator.cpp
+
+debug/moc_serverclient.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobjectdefs.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qnamespace.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qglobal.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qconfig-bootstrapped.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qconfig.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtcore-config.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsystemdetection.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qprocessordetection.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcompilerdetection.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtypeinfo.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsysinfo.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qlogging.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qflags.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbasicatomic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic_bootstrap.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qgenericatomic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic_cxx11.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic_msvc.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qglobalstatic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qmutex.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qnumeric.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qversiontagging.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobjectdefs_impl.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstring.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qchar.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbytearray.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qrefcount.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qarraydata.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstringbuilder.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qlist.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qalgorithms.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qiterator.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qhashfunctions.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qpair.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbytearraylist.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstringlist.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qregexp.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstringmatcher.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcoreevent.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qscopedpointer.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qmetatype.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qvarlengtharray.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcontainerfwd.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject_impl.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/QTcpSocket \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtcpsocket.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtnetworkglobal.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtnetwork-config.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qabstractsocket.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qiodevice.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qdebug.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qhash.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qmap.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtextstream.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qlocale.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qvariant.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qshareddata.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qvector.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qpoint.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qset.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcontiguouscache.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsharedpointer.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsharedpointer_impl.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QTimer \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtimer.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbasictimer.h \
+		src/datatypes.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QString \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QMetaType \
+		src/core/serverclient.h \
+		debug/moc_predefs.h \
+		../../../qt/5.9.8/mingw53_32/bin/moc.exe
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\serverclient.h -o debug\moc_serverclient.cpp
 
 debug/moc_dbbridge.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject.h \
@@ -520,7 +603,7 @@ debug/moc_dbbridge.cpp: ../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
 		src/core/dbbridge.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\dbbridge.h -o debug\moc_dbbridge.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\core\dbbridge.h -o debug\moc_dbbridge.cpp
 
 debug/moc_trendchart.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -629,7 +712,7 @@ debug/moc_trendchart.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget
 		src/widgets/trendchart.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\trendchart.h -o debug\moc_trendchart.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\trendchart.h -o debug\moc_trendchart.cpp
 
 debug/moc_overviewcard.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QFrame \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qframe.h \
@@ -735,7 +818,7 @@ debug/moc_overviewcard.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QFram
 		src/widgets/overviewcard.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\overviewcard.h -o debug\moc_overviewcard.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\overviewcard.h -o debug\moc_overviewcard.cpp
 
 debug/moc_devicelist.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -844,7 +927,7 @@ debug/moc_devicelist.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget
 		src/widgets/devicelist.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\devicelist.h -o debug\moc_devicelist.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\devicelist.h -o debug\moc_devicelist.cpp
 
 debug/moc_alarmpanel.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -953,7 +1036,7 @@ debug/moc_alarmpanel.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget
 		src/widgets/alarmpanel.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\alarmpanel.h -o debug\moc_alarmpanel.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\alarmpanel.h -o debug\moc_alarmpanel.cpp
 
 debug/moc_videowidget.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -1064,7 +1147,7 @@ debug/moc_videowidget.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidge
 		src/widgets/videowidget.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\videowidget.h -o debug\moc_videowidget.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\widgets\videowidget.h -o debug\moc_videowidget.cpp
 
 debug/moc_dashboardpage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -1174,7 +1257,7 @@ debug/moc_dashboardpage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWid
 		src/pages/dashboardpage.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\dashboardpage.h -o debug\moc_dashboardpage.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\dashboardpage.h -o debug\moc_dashboardpage.cpp
 
 debug/moc_historypage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -1283,7 +1366,7 @@ debug/moc_historypage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidge
 		src/pages/historypage.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\historypage.h -o debug\moc_historypage.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\historypage.h -o debug\moc_historypage.cpp
 
 debug/moc_videopage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -1388,7 +1471,7 @@ debug/moc_videopage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget 
 		src/pages/videopage.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\videopage.h -o debug\moc_videopage.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\videopage.h -o debug\moc_videopage.cpp
 
 debug/moc_recordspage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidget \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qwidget.h \
@@ -1497,7 +1580,7 @@ debug/moc_recordspage.cpp: ../../../qt/5.9.8/mingw53_32/include/QtWidgets/QWidge
 		src/pages/recordspage.h \
 		debug/moc_predefs.h \
 		../../../qt/5.9.8/mingw53_32/bin/moc.exe
-	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\recordspage.h -o debug\moc_recordspage.cpp
+	D:\qt\5.9.8\mingw53_32\bin\moc.exe $(DEFINES) --include debug/moc_predefs.h -ID:/qt/5.9.8/mingw53_32/mkspecs/win32-g++ -ID:/QTDemo/test/hmi -ID:/QTDemo/test/hmi/XS_/db -ID:/qt/5.9.8/mingw53_32/include -ID:/qt/5.9.8/mingw53_32/include/QtWidgets -ID:/qt/5.9.8/mingw53_32/include/QtGui -ID:/qt/5.9.8/mingw53_32/include/QtANGLE -ID:/qt/5.9.8/mingw53_32/include/QtNetwork -ID:/qt/5.9.8/mingw53_32/include/QtCore -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include -ID:/qt/Tools/mingw530_32/lib/gcc/i686-w64-mingw32/5.3.0/include-fixed -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++ -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/i686-w64-mingw32 -ID:/qt/Tools/mingw530_32/i686-w64-mingw32/include/c++/backward src\pages\recordspage.h -o debug\moc_recordspage.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -1745,6 +1828,12 @@ debug/mainwindow.o: src/mainwindow.cpp src/mainwindow.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/QTimer \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qtimer.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qbasictimer.h \
+		src/core/serverclient.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/QTcpSocket \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtcpsocket.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtnetworkglobal.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtnetwork-config.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qabstractsocket.h \
 		src/core/dbbridge.h \
 		XS_/db/storage.h \
 		XS_/db/sqlite3.h \
@@ -1775,7 +1864,9 @@ debug/mainwindow.o: src/mainwindow.cpp src/mainwindow.h \
 		../../../qt/5.9.8/mingw53_32/include/QtWidgets/qbuttongroup.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/QCoreApplication \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qcoreapplication.h \
-		../../../qt/5.9.8/mingw53_32/include/QtCore/qeventloop.h
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qeventloop.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QSettings \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsettings.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\mainwindow.o src\mainwindow.cpp
 
 debug/datamanager.o: src/core/datamanager.cpp src/core/datamanager.h \
@@ -1992,6 +2083,85 @@ debug/datasimulator.o: src/core/datasimulator.cpp src/core/datasimulator.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qeventloop.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/QtGlobal
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\datasimulator.o src\core\datasimulator.cpp
+
+debug/serverclient.o: src/core/serverclient.cpp src/core/serverclient.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobjectdefs.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qnamespace.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qglobal.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qconfig-bootstrapped.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qconfig.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtcore-config.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsystemdetection.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qprocessordetection.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcompilerdetection.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtypeinfo.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsysinfo.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qlogging.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qflags.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbasicatomic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic_bootstrap.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qgenericatomic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic_cxx11.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qatomic_msvc.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qglobalstatic.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qmutex.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qnumeric.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qversiontagging.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobjectdefs_impl.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstring.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qchar.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbytearray.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qrefcount.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qarraydata.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstringbuilder.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qlist.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qalgorithms.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qiterator.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qhashfunctions.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qpair.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbytearraylist.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstringlist.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qregexp.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qstringmatcher.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcoreevent.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qscopedpointer.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qmetatype.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qvarlengtharray.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcontainerfwd.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qobject_impl.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/QTcpSocket \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtcpsocket.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtnetworkglobal.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qtnetwork-config.h \
+		../../../qt/5.9.8/mingw53_32/include/QtNetwork/qabstractsocket.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qiodevice.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qdebug.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qhash.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qmap.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtextstream.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qlocale.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qvariant.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qshareddata.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qvector.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qpoint.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qset.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qcontiguouscache.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsharedpointer.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qsharedpointer_impl.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QTimer \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qtimer.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qbasictimer.h \
+		src/datatypes.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QString \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QMetaType \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QtEndian \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qendian.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QDateTime \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qdatetime.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\serverclient.o src\core\serverclient.cpp
 
 debug/dbbridge.o: src/core/dbbridge.cpp src/core/dbbridge.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/QObject \
@@ -2682,6 +2852,9 @@ debug/videowidget.o: src/widgets/videowidget.cpp src/widgets/videowidget.h \
 		../../../qt/5.9.8/mingw53_32/include/QtGui/qpen.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/QDateTime \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/qdatetime.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/QDir \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qdir.h \
+		../../../qt/5.9.8/mingw53_32/include/QtCore/qfileinfo.h \
 		../../../qt/5.9.8/mingw53_32/include/QtCore/QtGlobal
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\videowidget.o src\widgets\videowidget.cpp
 
@@ -3320,6 +3493,9 @@ debug/moc_datamanager.o: debug/moc_datamanager.cpp
 
 debug/moc_datasimulator.o: debug/moc_datasimulator.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\moc_datasimulator.o debug\moc_datasimulator.cpp
+
+debug/moc_serverclient.o: debug/moc_serverclient.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\moc_serverclient.o debug\moc_serverclient.cpp
 
 debug/moc_dbbridge.o: debug/moc_dbbridge.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\moc_dbbridge.o debug\moc_dbbridge.cpp

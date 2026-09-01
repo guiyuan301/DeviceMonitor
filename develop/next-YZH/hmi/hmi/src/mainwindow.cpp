@@ -2,6 +2,7 @@
 #include "theme.h"
 #include "core/datamanager.h"
 #include "core/datasimulator.h"
+#include "core/serverclient.h"
 #include "core/dbbridge.h"
 #include "pages/dashboardpage.h"
 #include "pages/historypage.h"
@@ -17,6 +18,7 @@
 #include <QDateTime>
 #include <QButtonGroup>
 #include <QCoreApplication>
+#include <QSettings>
 
 MainWindow::~MainWindow()
 {
@@ -129,14 +131,55 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     main->addWidget(m_stack, 1);
     main->addWidget(navBar);
 
-    // ---- 数据源: 模拟器 (接真实数据时, 替换为服务端解析线程的信号) ----
-    m_sim = new DataSimulator(this);
-    connect(m_sim, &DataSimulator::deviceData,
-            &DataManager::instance(), &DataManager::onDeviceData);
-    // 抓拍请求: 真实系统改为 connect 到 server_send_cmd(devid, 0x04手动抓拍)
-    connect(&DataManager::instance(), &DataManager::snapshotRequested,
-            m_sim, &DataSimulator::onSnapshotRequested);
-    m_sim->start(1000);
+    // ---- 数据源二选一: 服务端真实数据 / 模拟器 ----
+    /* QSettings 键(配置文件里可改):
+     *   server/enabled = true/false   是否连服务端(板上默认 true, Windows 默认 false)
+     *   server/ip      = x.x.x.x      服务端 IP(队友中央板地址)
+     *   server/port    = 8888         服务端端口(与 service/central 的 server_main 一致) */
+    QSettings settings;
+    const bool useServer = settings.value("server/enabled",
+#if defined(Q_OS_LINUX)
+                                          true      // 板上: 默认连真实服务端
+#else
+                                          false     // Windows 开发机: 默认模拟器演示
+#endif
+                                          ).toBool();
+
+    if (useServer) {
+        /* 真实链路: 采集板 → 服务端(转发补丁) → 本客户端 → DataManager
+         * 模拟器不再启动, 抓拍请求也不回灌假图(真实抓拍只来自视频页手动抓拍) */
+        m_client = new ServerClient(this);
+        connect(m_client, &ServerClient::deviceData,
+                &DataManager::instance(), &DataManager::onDeviceData);
+
+        // 连接状态 → 顶栏 LED 变色 + 断线时全部采集点标离线(触发离线告警)
+        connect(m_client, &ServerClient::connectedChanged, this, [this](bool on) {
+            m_netLed->setStyleSheet(QString("background:%1; border-radius:4px;")
+                                    .arg(on ? "#00c896" : "#e74c3c"));
+            if (!on) {
+                const QList<int> ids = DataManager::instance().deviceIds();
+                for (int id : ids)
+                    DataManager::instance().setDeviceOnline(id, false);
+            }
+        });
+        // 连接状态文本 → 顶栏"数据源:xxx"
+        connect(m_client, &ServerClient::statusText, this, [this](const QString &t) {
+            m_netLabel->setText(QString("数据源: %1").arg(t));
+        });
+
+        m_client->start(settings.value("server/ip", "192.168.1.100").toString(),
+                        quint16(settings.value("server/port", 8888).toUInt()));
+    } else {
+        // 模拟链路(原 V3 行为): 定时器 1Hz 产 3 个采集点数据
+        m_sim = new DataSimulator(this);
+        connect(m_sim, &DataSimulator::deviceData,
+                &DataManager::instance(), &DataManager::onDeviceData);
+        // 抓拍请求: 真实系统改为 connect 到 server_send_cmd(devid, 0x04手动抓拍)
+        connect(&DataManager::instance(), &DataManager::snapshotRequested,
+                m_sim, &DataSimulator::onSnapshotRequested);
+        m_sim->start(1000);
+        m_netLabel->setText("数据源: 模拟");
+    }
 
     QTimer *clockTimer = new QTimer(this);
     clockTimer->setInterval(1000);

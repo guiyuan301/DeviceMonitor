@@ -3,6 +3,7 @@ INPUT(
 ./release\mainwindow.o
 ./release\datamanager.o
 ./release\datasimulator.o
+./release\serverclient.o
 ./release\dbbridge.o
 ./release\trendchart.o
 ./release\overviewcard.o
@@ -19,6 +20,7 @@ INPUT(
 ./release\moc_mainwindow.o
 ./release\moc_datamanager.o
 ./release\moc_datasimulator.o
+./release\moc_serverclient.o
 ./release\moc_dbbridge.o
 ./release\moc_trendchart.o
 ./release\moc_overviewcard.o

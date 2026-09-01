@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_VideoWidget_t {
-    QByteArrayData data[15];
-    char stringdata0[155];
+    QByteArrayData data[16];
+    char stringdata0[169];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -45,14 +45,15 @@ QT_MOC_LITERAL(10, 107, 3), // "err"
 QT_MOC_LITERAL(11, 111, 14), // "onProcFinished"
 QT_MOC_LITERAL(12, 126, 4), // "code"
 QT_MOC_LITERAL(13, 131, 20), // "QProcess::ExitStatus"
-QT_MOC_LITERAL(14, 152, 2) // "st"
+QT_MOC_LITERAL(14, 152, 2), // "st"
+QT_MOC_LITERAL(15, 155, 13) // "onCamWatchdog"
 
     },
     "VideoWidget\0statusChanged\0\0text\0"
     "sourceMessage\0msg\0onSimTick\0onReadyRead\0"
     "onProcError\0QProcess::ProcessError\0"
     "err\0onProcFinished\0code\0QProcess::ExitStatus\0"
-    "st"
+    "st\0onCamWatchdog"
 };
 #undef QT_MOC_LITERAL
 
@@ -62,7 +63,7 @@ static const uint qt_meta_data_VideoWidget[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       6,   14, // methods
+       7,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -70,14 +71,15 @@ static const uint qt_meta_data_VideoWidget[] = {
        2,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    1,   44,    2, 0x06 /* Public */,
-       4,    1,   47,    2, 0x06 /* Public */,
+       1,    1,   49,    2, 0x06 /* Public */,
+       4,    1,   52,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       6,    0,   50,    2, 0x08 /* Private */,
-       7,    0,   51,    2, 0x08 /* Private */,
-       8,    1,   52,    2, 0x08 /* Private */,
-      11,    2,   55,    2, 0x08 /* Private */,
+       6,    0,   55,    2, 0x08 /* Private */,
+       7,    0,   56,    2, 0x08 /* Private */,
+       8,    1,   57,    2, 0x08 /* Private */,
+      11,    2,   60,    2, 0x08 /* Private */,
+      15,    0,   65,    2, 0x08 /* Private */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QString,    3,
@@ -88,6 +90,7 @@ static const uint qt_meta_data_VideoWidget[] = {
     QMetaType::Void,
     QMetaType::Void, 0x80000000 | 9,   10,
     QMetaType::Void, QMetaType::Int, 0x80000000 | 13,   12,   14,
+    QMetaType::Void,
 
        0        // eod
 };
@@ -104,6 +107,7 @@ void VideoWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         case 3: _t->onReadyRead(); break;
         case 4: _t->onProcError((*reinterpret_cast< QProcess::ProcessError(*)>(_a[1]))); break;
         case 5: _t->onProcFinished((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< QProcess::ExitStatus(*)>(_a[2]))); break;
+        case 6: _t->onCamWatchdog(); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -150,13 +154,13 @@ int VideoWidget::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 6)
+        if (_id < 7)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 7;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 6)
+        if (_id < 7)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 6;
+        _id -= 7;
     }
     return _id;
 }

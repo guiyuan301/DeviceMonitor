@@ -2,7 +2,7 @@
 #include <QFont>
 #include "mainwindow.h"
 #include "datatypes.h"
-
+// 新版本
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

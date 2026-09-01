@@ -219,6 +219,7 @@ Makefile: hmi.pro ../../../qt/5.9.8/mingw53_32/mkspecs/win32-g++/qmake.conf ../.
 		../../../qt/5.9.8/mingw53_32/lib/qtmaind.prl \
 		../../../qt/5.9.8/mingw53_32/lib/Qt5Widgets.prl \
 		../../../qt/5.9.8/mingw53_32/lib/Qt5Gui.prl \
+		../../../qt/5.9.8/mingw53_32/lib/Qt5Network.prl \
 		../../../qt/5.9.8/mingw53_32/lib/Qt5Core.prl
 	$(QMAKE) -o Makefile hmi.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"
 ../../../qt/5.9.8/mingw53_32/mkspecs/features/spec_pre.prf:
@@ -379,6 +380,7 @@ hmi.pro:
 ../../../qt/5.9.8/mingw53_32/lib/qtmaind.prl:
 ../../../qt/5.9.8/mingw53_32/lib/Qt5Widgets.prl:
 ../../../qt/5.9.8/mingw53_32/lib/Qt5Gui.prl:
+../../../qt/5.9.8/mingw53_32/lib/Qt5Network.prl:
 ../../../qt/5.9.8/mingw53_32/lib/Qt5Core.prl:
 qmake: FORCE
 	@$(QMAKE) -o Makefile hmi.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"

@@ -3,6 +3,7 @@ INPUT(
 ./debug\mainwindow.o
 ./debug\datamanager.o
 ./debug\datasimulator.o
+./debug\serverclient.o
 ./debug\dbbridge.o
 ./debug\trendchart.o
 ./debug\overviewcard.o
@@ -19,6 +20,7 @@ INPUT(
 ./debug\moc_mainwindow.o
 ./debug\moc_datamanager.o
 ./debug\moc_datasimulator.o
+./debug\moc_serverclient.o
 ./debug\moc_dbbridge.o
 ./debug\moc_trendchart.o
 ./debug\moc_overviewcard.o

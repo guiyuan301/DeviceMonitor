@@ -2,7 +2,7 @@
 # 车间设备集中监控系统 HMI (Qt 5.9+, 480x272 工业看板)
 # 目标平台: Windows 预览 / 野火 i.MX6ULL MINI + 4.3寸屏
 #-------------------------------------------------
-QT       += core gui
+QT       += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG   += c++11
@@ -25,6 +25,7 @@ SOURCES += \
     src/mainwindow.cpp \
     src/core/datamanager.cpp \
     src/core/datasimulator.cpp \
+    src/core/serverclient.cpp \
     src/core/dbbridge.cpp \
     src/widgets/trendchart.cpp \
     src/widgets/overviewcard.cpp \
@@ -45,6 +46,7 @@ HEADERS += \
     src/theme.h \
     src/core/datamanager.h \
     src/core/datasimulator.h \
+    src/core/serverclient.h \
     src/core/dbbridge.h \
     src/widgets/trendchart.h \
     src/widgets/overviewcard.h \
