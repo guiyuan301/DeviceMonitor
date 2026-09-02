@@ -101,6 +101,19 @@ ParseResult parse_packet(char *buf, int *len, uint16_t *out_device_id, DataPaylo
         *len -= total_len;
         return PARSE_HEARTBEAT;
 
+    } else if (hdr->type == 0x03) {
+        if (payload_len != 0) {
+            memmove(buf, buf + total_len, *len - total_len);
+            *len -= total_len;
+            return PARSE_UNKNOWN_TYPE;
+        }
+
+        if (out_device_id) *out_device_id = ntohs(hdr->device_id);
+
+        memmove(buf, buf + total_len, *len - total_len);
+        *len -= total_len;
+        return PARSE_MONITOR;
+
     } else {
         memmove(buf, buf + total_len, *len - total_len);
         *len -= total_len;

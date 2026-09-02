@@ -13,6 +13,7 @@
 typedef struct {
     int fd;                      // socket fd
     uint16_t device_id;          // 设备号（解析后填充）
+    int is_monitor;              // 1=看板客户端(HMI), 0=普通采集板
     char recv_buf[RECV_BUF_SIZE]; // 接收缓冲区
     int recv_len;                // 当前缓冲有效数据长度
     time_t last_heartbeat;       // 最后心跳时间
