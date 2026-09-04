@@ -71,6 +71,7 @@ static on_heartbeat_t g_on_heartbeat = NULL;      // 收到心跳包时回调
 // 负责：魔数校验 → CRC校验 → 解析包头 → 提取 DataPayload
 // parse_packet(char *buf, int *len, uint16_t *out_device_id, DataPayload *out_payload)
 
+<<<<<<< HEAD
 /* ============================================================================
  * 二、内部辅助函数
  *    set_nonblocking — 设置 fd 为非阻塞模式（epoll ET 必须配合非阻塞 I/O）
@@ -78,6 +79,11 @@ static on_heartbeat_t g_on_heartbeat = NULL;      // 收到心跳包时回调
  *    find_free_client — 在连接池中找到一个空闲槽位
  *    reset_client — 将连接槽位重置为初始状态（fd=-1 表示空闲）
  * ============================================================================ */
+=======
+static void remove_client(int fd);
+
+/* ========== 内部辅助函数 ========== */
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
 
 /**
  * @brief 将文件描述符设置为非阻塞模式
@@ -137,6 +143,7 @@ static void reset_client(ClientConnection *conn) {
     if (!conn) return;
     conn->fd = -1;
     conn->device_id = 0;
+    conn->is_monitor = 0;
     conn->recv_len = 0;
     conn->online = 0;
     conn->is_hmi = 0;
@@ -148,11 +155,70 @@ static void reset_client(ClientConnection *conn) {
     memset(conn->recv_buf, 0, sizeof(conn->recv_buf));
 }
 
+<<<<<<< HEAD
 /* ============================================================================
  * 三、客户端连接管理
  *    add_client  — 接受新连接，分配槽位，注册到 epoll
  *    remove_client — 断开连接，触发离线回调，释放槽位
  * ============================================================================ */
+=======
+static void broadcast_to_monitors(uint16_t device_id, const DataPayload *p) {
+    uint8_t pkt[12 + sizeof(DataPayload)];
+    memset(pkt, 0, sizeof(pkt));
+
+    pkt[0] = 0x5A; pkt[1] = 0x5A;
+    uint32_t plen = (uint32_t)sizeof(DataPayload);
+    pkt[2] = (uint8_t)(plen >> 24);
+    pkt[3] = (uint8_t)(plen >> 16);
+    pkt[4] = (uint8_t)(plen >> 8);
+    pkt[5] = (uint8_t)(plen);
+    pkt[6] = 0x01;
+    pkt[7] = 0x01;
+    pkt[8] = (uint8_t)(device_id >> 8);
+    pkt[9] = (uint8_t)(device_id);
+
+    uint8_t *body = pkt + 12;
+    uint32_t ts = (uint32_t)p->timestamp;
+    uint16_t temp = (uint16_t)p->temperature;
+    uint32_t prod = (uint32_t)p->production;
+
+    body[0] = (uint8_t)(ts >> 24);
+    body[1] = (uint8_t)(ts >> 16);
+    body[2] = (uint8_t)(ts >> 8);
+    body[3] = (uint8_t)(ts);
+    body[4] = (uint8_t)(temp >> 8);
+    body[5] = (uint8_t)(temp);
+    body[6] = p->status;
+    body[7] = p->humi;
+    body[8] = (uint8_t)(prod >> 24);
+    body[9] = (uint8_t)(prod >> 16);
+    body[10] = (uint8_t)(prod >> 8);
+    body[11] = (uint8_t)(prod);
+    body[12] = 0;
+    body[13] = 0;
+    body[14] = 0;
+
+    uint8_t crc_buf[8 + sizeof(DataPayload)];
+    memcpy(crc_buf, pkt, 8);
+    memcpy(crc_buf + 8, body, sizeof(DataPayload));
+    uint16_t crc = crc16_calc(crc_buf, 8 + sizeof(DataPayload));
+    pkt[10] = (uint8_t)(crc >> 8);
+    pkt[11] = (uint8_t)(crc);
+
+    const int total = (int)(12 + plen);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        ClientConnection *c = &g_clients[i];
+        if (c->fd == -1 || !c->is_monitor || !c->online)
+            continue;
+        ssize_t n = send(c->fd, pkt, (size_t)total, MSG_NOSIGNAL);
+        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            remove_client(c->fd);
+        }
+    }
+}
+
+/* ========== 客户端管理 ========== */
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
 
 /**
  * @brief 接受一个新客户端连接并注册到 epoll
@@ -331,6 +397,7 @@ static void handle_client_data(int fd) {
             // 将数据提交到线程池队列，由工作线程异步入库
             // 注意：这里传递的是 conn 和 payload 的指针，队列内部会做 memcpy 复制
             thread_pool_submit(conn, &payload);
+            broadcast_to_monitors(new_id, &payload);
 
         } else if (result == PARSE_HEARTBEAT) {
             /* --- 收到 type=0x02 心跳包（无负载） --- */
@@ -350,6 +417,7 @@ static void handle_client_data(int fd) {
 
             if (g_on_heartbeat) g_on_heartbeat(conn);
 
+<<<<<<< HEAD
         } else if (result == PARSE_REGISTER) {
             /* --- 收到 type=0x03 HMI注册包 --- */
             conn->is_hmi = 1;
@@ -359,6 +427,12 @@ static void handle_client_data(int fd) {
             /* 触发上线回调，向HMI推送设备列表和实时数据 */
             conn->online = 0;  /* 临时置0，让 on_device_online 能触发 */
             if (g_on_online) g_on_online(conn);
+=======
+        } else if (result == PARSE_MONITOR) {
+            conn->is_monitor = 1;
+            conn->last_heartbeat = time(NULL);
+            printf("[INFO] fd=%d 注册为看板客户端(HMI)\n", fd);
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
 
         } else if (result == PARSE_INCOMPLETE) {
             /* --- 数据不完整：包头还没收全，或负载只收到一半 --- */
@@ -720,6 +794,7 @@ ClientConnection* server_find_by_device_id(uint16_t device_id) {
 void server_disconnect_client(int fd) {
     remove_client(fd);
 }
+<<<<<<< HEAD
 
 /**
  * @brief 向指定HMI客户端发送数据包
@@ -776,3 +851,5 @@ void server_broadcast_to_hmi(uint8_t type, uint16_t device_id, const void *paylo
         }
     }
 }
+=======
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e

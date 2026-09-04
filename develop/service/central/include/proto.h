@@ -78,7 +78,11 @@ uint16_t crc16_calc(const uint8_t *data, size_t len);
 typedef enum {
     PARSE_OK = 0,           // 成功解析一个数据包
     PARSE_HEARTBEAT = 1,    // 收到心跳包（不产生数据）
+<<<<<<< HEAD
     PARSE_REGISTER = 2,     // 收到HMI注册包
+=======
+    PARSE_MONITOR = 2,      // 看板客户端注册包(0x03)
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
     PARSE_INCOMPLETE = -1,  // 数据不完整，需要继续接收
     PARSE_CRC_ERROR = -2,   // CRC 校验失败
     PARSE_MAGIC_ERROR = -3, // 魔数错误（可能丢包错位）

@@ -13,6 +13,7 @@
 typedef struct {
     int fd;                      // socket fd
     uint16_t device_id;          // 设备号（解析后填充）
+    int is_monitor;              // 1=看板客户端(HMI), 0=普通采集板
     char recv_buf[RECV_BUF_SIZE]; // 接收缓冲区
     int recv_len;                // 当前缓冲有效数据长度
     time_t last_heartbeat;       // 最后心跳时间
@@ -68,6 +69,7 @@ ClientConnection* server_find_by_device_id(uint16_t device_id);
 // 断开指定连接
 void server_disconnect_client(int fd);
 
+<<<<<<< HEAD
 // 向指定HMI客户端发送数据包（device_id 写入包头，HMI据此识别设备）
 int server_send_to_hmi(ClientConnection *hmi, uint8_t type, uint16_t device_id, const void *payload, uint16_t payload_len);
 
@@ -75,3 +77,6 @@ int server_send_to_hmi(ClientConnection *hmi, uint8_t type, uint16_t device_id, 
 void server_broadcast_to_hmi(uint8_t type, uint16_t device_id, const void *payload, uint16_t payload_len);
 
 #endif
+=======
+#endif
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
