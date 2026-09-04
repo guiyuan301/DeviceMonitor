@@ -64,6 +64,15 @@ struct SnapItem {
     QString path;          // jpeg 文件路径
 };
 
+// 设备信息包（服务端推送）
+struct DeviceInfoPayload {
+    quint16 device_id;        // 设备号
+    char     name[64];        // 设备名称
+    char     group_name[64];  // 分组名
+    quint8   online;          // 在线状态 0=离线 1=在线
+    quint8   reserved[3];     // 保留对齐
+};
+
 Q_DECLARE_METATYPE(DeviceData)
 Q_DECLARE_METATYPE(AlarmItem)
 Q_DECLARE_METATYPE(SnapItem)

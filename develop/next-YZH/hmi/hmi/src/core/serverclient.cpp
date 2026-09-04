@@ -201,6 +201,30 @@ void ServerClient::processBuffer()
             d.online = true;
             d.ts = QDateTime::currentMSecsSinceEpoch();  // 用本机毫秒时间, 与历史曲线对齐
             emit deviceData(d);
+            emit realtimeDataReceived(d);
+        } else if (type == 0x10 && int(payloadLen) >= 131) {
+            /* 设备信息帧(服务端推送的设备列表), 结构:
+             *   [0-1]device_id [2-65]name [66-129]group_name [130]online [131-133]reserved */
+            DeviceInfoPayload info;
+            memcpy(&info, payload, sizeof(info));
+            
+            int id = qFromBigEndian<quint16>(info.device_id);
+            QString name = QString::fromLocal8Bit(info.name, strnlen(info.name, sizeof(info.name)));
+            QString group = QString::fromLocal8Bit(info.group_name, strnlen(info.group_name, sizeof(info.group_name)));
+            bool online = info.online != 0;
+            
+            emit deviceInfoReceived(id, name, group, online);
+        } else if (type == 0x11 && int(payloadLen) == kPayloadLen) {
+            /* 实时数据帧(服务端推送), 格式与0x01相同 */
+            DeviceData d;
+            d.id = int(deviceId);
+            d.temp = qint16(qFromBigEndian<quint16>(payload + 4)) / 100.0;
+            d.humi = payload[7];
+            d.output = qFromBigEndian<quint32>(payload + 8);
+            d.online = true;
+            d.ts = QDateTime::currentMSecsSinceEpoch();
+            emit deviceData(d);
+            emit realtimeDataReceived(d);
         }
         // 0x02/0x03/其它类型: 客户端只需"消费"掉即可, 无需处理
 

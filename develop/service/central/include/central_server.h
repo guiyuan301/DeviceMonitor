@@ -17,6 +17,7 @@ typedef struct {
     int recv_len;                // 当前缓冲有效数据长度
     time_t last_heartbeat;       // 最后心跳时间
     int online;                  // 1=在线, 0=离线
+    int is_hmi;                  // 1=HMI看板客户端, 0=采集板
     char ip[16];                 // 客户端IP
     uint16_t port;               // 客户端端口
     time_t connected_time;       // 连接建立时间
@@ -66,5 +67,11 @@ ClientConnection* server_find_by_device_id(uint16_t device_id);
 
 // 断开指定连接
 void server_disconnect_client(int fd);
+
+// 向指定HMI客户端发送数据包（device_id 写入包头，HMI据此识别设备）
+int server_send_to_hmi(ClientConnection *hmi, uint8_t type, uint16_t device_id, const void *payload, uint16_t payload_len);
+
+// 向所有HMI客户端广播数据包
+void server_broadcast_to_hmi(uint8_t type, uint16_t device_id, const void *payload, uint16_t payload_len);
 
 #endif

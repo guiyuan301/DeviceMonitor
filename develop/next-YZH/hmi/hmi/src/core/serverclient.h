@@ -15,7 +15,9 @@
  *   2. 每 5 秒发一帧 0x02 心跳包(服务端 15 秒收不到心跳会断开连接);
  *   3. 收到服务端转发的 0x01 数据上报包 → 按协议还原温湿度/产量
  *      → emit deviceData() → MainWindow 接给 DataManager 刷大屏;
- *   4. 连接断开(网线拔了/服务端重启)后每 3 秒自动重连, 全程无需人工干预。
+ *   4. 收到服务端推送的 0x10 设备列表包 → 更新HMI设备信息;
+ *   5. 收到服务端推送的 0x11 实时数据包 → 更新HMI实时数据;
+ *   6. 连接断开(网线拔了/服务端重启)后每 3 秒自动重连, 全程无需人工干预。
  *
  * 协议格式(大端字节序): 12 字节定长包头 + 变长负载
  *   [0-1]魔数0x5A5A [2-5]负载长度 [6]类型 [7]版本 [8-9]设备号 [10-11]CRC16
@@ -36,6 +38,8 @@ signals:
     void connectedChanged(bool on);            // 连接建立/断开(顶栏 LED 用)
     void statusText(const QString &text);      // 状态描述(顶栏"数据源:"文本)
     void deviceData(const DeviceData &data);   // 还原出的一条实时数据 → DataManager
+    void deviceInfoReceived(int deviceId, const QString &name, const QString &group, bool online);  // 设备信息包
+    void realtimeDataReceived(const DeviceData &data);  // 实时数据包
 
 private slots:
     void onConnected();      // 连上: 发注册包 + 启动心跳定时器

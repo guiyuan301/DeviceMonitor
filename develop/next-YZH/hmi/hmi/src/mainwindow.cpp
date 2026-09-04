@@ -151,6 +151,12 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
         m_client = new ServerClient(this);
         connect(m_client, &ServerClient::deviceData,
                 &DataManager::instance(), &DataManager::onDeviceData);
+        
+        // 连接服务端推送的数据到DbBridge，写入本地数据库
+        connect(m_client, &ServerClient::realtimeDataReceived,
+                &DbBridge::instance(), &DbBridge::onRealtimeDataReceived);
+        connect(m_client, &ServerClient::deviceInfoReceived,
+                &DbBridge::instance(), &DbBridge::onDeviceInfoReceived);
 
         // 连接状态 → 顶栏 LED 变色 + 断线时全部采集点标离线(触发离线告警)
         connect(m_client, &ServerClient::connectedChanged, this, [this](bool on) {

@@ -322,3 +322,62 @@ QVector<Sample> DbBridge::queryHistory(int deviceId, qint64 fromMs, qint64 toMs)
     delete[] arr;
     return out;
 }
+
+// ---------------- 从服务端接收数据并写入 ----------------
+
+void DbBridge::onRealtimeDataReceived(const DeviceData &data)
+{
+    if (!m_open || data.id <= 0)
+        return;
+
+    // 写入实时表
+    sensor_sample_t s;
+    memset(&s, 0, sizeof(s));
+    s.device_id = data.id;
+    s.temperature = data.temp;
+    s.humidity = data.humi;
+    s.run_status = data.online ? 1 : 0;
+    s.output_count = data.output;
+    s.sample_ts = data.ts / 1000;
+    db_realtime_upsert(&s);
+
+    // 写入历史表
+    if (data.online) {
+        db_history_insert(&s);
+    }
+    
+    // 更新设备在线状态
+    device_info_t dev;
+    memset(&dev, 0, sizeof(dev));
+    dev.device_id = data.id;
+    snprintf(dev.name, sizeof(dev.name), "Device_%d", data.id);
+    strncpy(dev.group_name, "车间", sizeof(dev.group_name) - 1);
+    dev.registered_at = time(NULL);
+    
+    device_info_t got;
+    if (db_device_get(data.id, &got) == DB_OK)
+        db_device_update(&dev);
+    else
+        db_device_insert(&dev);
+}
+
+void DbBridge::onDeviceInfoReceived(int deviceId, const QString &name, const QString &group, bool online)
+{
+    if (!m_open || deviceId <= 0)
+        return;
+
+    device_info_t dev;
+    memset(&dev, 0, sizeof(dev));
+    dev.device_id = deviceId;
+    QByteArray nameUtf8 = name.toUtf8();
+    QByteArray groupUtf8 = group.toUtf8();
+    strncpy(dev.name, nameUtf8.constData(), sizeof(dev.name) - 1);
+    strncpy(dev.group_name, groupUtf8.constData(), sizeof(dev.group_name) - 1);
+    dev.registered_at = time(NULL);
+    
+    device_info_t got;
+    if (db_device_get(deviceId, &got) == DB_OK)
+        db_device_update(&dev);
+    else
+        db_device_insert(&dev);
+}

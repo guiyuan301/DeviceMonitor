@@ -4,7 +4,7 @@
 
 CC = gcc
 CFLAGS = -Wall -g -I./include -pthread
-LDFLAGS = -lpthread -lsqlite3   # <--- 这里加上了 -lsqlite3
+LDFLAGS = -lpthread -ldl
 
 # 目录
 SRC_DIR = src
@@ -16,7 +16,10 @@ SERVER_SRCS = $(SRC_DIR)/server_main.c \
               $(SRC_DIR)/central_server.c \
               $(SRC_DIR)/protocol_parser.c \
               $(SRC_DIR)/thread_pool.c \
-              $(SRC_DIR)/database_manager.c   # <--- 这里加上了数据库源文件
+              $(SRC_DIR)/database_manager.c \
+              $(SRC_DIR)/storage.c \
+              $(SRC_DIR)/alarm.c \
+              $(SRC_DIR)/sqlite3.c
 
 TEST_SRCS = $(TEST_DIR)/test_parser.c \
             $(SRC_DIR)/protocol_parser.c

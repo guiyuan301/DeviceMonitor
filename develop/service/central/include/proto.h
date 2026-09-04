@@ -34,6 +34,40 @@ typedef struct {
 /* ========== 心跳包负载：空 (type=0x02) ========== */
 // 不需要额外结构体
 
+/* ========== 设备列表包：服务端→HMI (type=0x10) ========== */
+// 包含设备基本信息，用于HMI初始化设备列表
+typedef struct {
+    uint16_t device_id;        // 设备号
+    char     name[64];         // 设备名称
+    char     group_name[64];   // 分组名
+    uint8_t  online;           // 在线状态 0=离线 1=在线
+    uint8_t  reserved[3];      // 保留对齐
+} DeviceInfoPayload;
+
+/* ========== 实时数据包：服务端→HMI (type=0x11) ========== */
+// 与 DataPayload 格式相同，但用于服务端主动推送
+// 复用 DataPayload 结构体
+
+/* ========== 历史数据包：服务端→HMI (type=0x12) ========== */
+typedef struct {
+    uint16_t device_id;        // 设备号
+    uint8_t  count;            // 本包包含的采样点数量（最多10）
+    uint8_t  reserved;         // 保留对齐
+    // 后面跟着 count 个 HistorySample
+} HistoryHeader;
+
+typedef struct {
+    int32_t  temperature;      // 温度×100
+    uint8_t  humidity;         // 湿度
+    uint8_t  status;           // 运行状态
+    uint16_t reserved;         // 保留
+    int32_t  production;       // 产量
+    uint32_t timestamp;        // 时间戳（秒）
+} HistorySample;
+
+/* ========== HMI注册包：HMI→服务端 (type=0x03) ========== */
+// 不需要额外结构体，空负载
+
 #pragma pack(pop)  //恢复之前的字节对齐设置
 
 
@@ -44,6 +78,7 @@ uint16_t crc16_calc(const uint8_t *data, size_t len);
 typedef enum {
     PARSE_OK = 0,           // 成功解析一个数据包
     PARSE_HEARTBEAT = 1,    // 收到心跳包（不产生数据）
+    PARSE_REGISTER = 2,     // 收到HMI注册包
     PARSE_INCOMPLETE = -1,  // 数据不完整，需要继续接收
     PARSE_CRC_ERROR = -2,   // CRC 校验失败
     PARSE_MAGIC_ERROR = -3, // 魔数错误（可能丢包错位）
