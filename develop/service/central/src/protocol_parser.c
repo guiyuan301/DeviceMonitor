@@ -102,11 +102,24 @@ ParseResult parse_packet(char *buf, int *len, uint16_t *out_device_id, DataPaylo
         return PARSE_HEARTBEAT;
 
     } else if (hdr->type == 0x03) {
+<<<<<<< HEAD
+=======
+        if (payload_len != 0) {
+            memmove(buf, buf + total_len, *len - total_len);
+            *len -= total_len;
+            return PARSE_UNKNOWN_TYPE;
+        }
+
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
         if (out_device_id) *out_device_id = ntohs(hdr->device_id);
 
         memmove(buf, buf + total_len, *len - total_len);
         *len -= total_len;
+<<<<<<< HEAD
         return PARSE_REGISTER;
+=======
+        return PARSE_MONITOR;
+>>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e
 
     } else {
         memmove(buf, buf + total_len, *len - total_len);
