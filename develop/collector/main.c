@@ -571,3 +571,4 @@ int main(void)
     printf("程序正常退出，GPIO已释放\n");
     return 0;
 }
+//测试
