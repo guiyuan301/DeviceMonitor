@@ -137,26 +137,38 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
      *   server/ip      = x.x.x.x      服务端 IP(队友中央板地址)
      *   server/port    = 8888         服务端端口(与 service/central 的 server_main 一致) */
     QSettings settings;
-    const bool useServer = settings.value("server/enabled",
-#if defined(Q_OS_LINUX)
-                                          true      // 板上: 默认连真实服务端
-#else
-                                          false     // Windows 开发机: 默认模拟器演示
-#endif
-                                          ).toBool();
+    /* 【修改】无论 Windows 还是 Linux，均默认连接服务端获取实时数据。
+     * 如需切回模拟器演示，在配置文件中设置 server/enabled=false 即可。 */
+    const bool useServer = settings.value("server/enabled", true).toBool();
 
     if (useServer) {
         /* 真实链路: 采集板 → 服务端(转发补丁) → 本客户端 → DataManager
          * 模拟器不再启动, 抓拍请求也不回灌假图(真实抓拍只来自视频页手动抓拍) */
         m_client = new ServerClient(this);
+
+        // 【修改点8】连接服务端→DataManager：实时数据刷新UI
         connect(m_client, &ServerClient::deviceData,
                 &DataManager::instance(), &DataManager::onDeviceData);
-        
-        // 连接服务端推送的数据到DbBridge，写入本地数据库
-        connect(m_client, &ServerClient::realtimeDataReceived,
-                &DbBridge::instance(), &DbBridge::onRealtimeDataReceived);
+
+        // 连接服务端推送的设备信息(0x10包) → DataManager 更新设备名/在线状态
+        connect(m_client, &ServerClient::deviceInfoReceived,
+                &DataManager::instance(), &DataManager::onDeviceInfoReceived);
+
+        // 连接服务端推送的设备信息(0x10包) → DbBridge 更新本地设备表
         connect(m_client, &ServerClient::deviceInfoReceived,
                 &DbBridge::instance(), &DbBridge::onDeviceInfoReceived);
+
+        /* 【修改点9-性能修复】不再把 realtimeDataReceived 连到 DbBridge 落库!
+         * 原因: 实时数据落库存在两条重复链路, 每条服务端数据会写库两遍:
+         *   链路A: deviceData → DataManager::onDeviceData → deviceUpdated
+         *          → DbBridge::onDeviceUpdated (实时表upsert + 历史表攒批提交)
+         *   链路B: realtimeDataReceived → DbBridge::onRealtimeDataReceived
+         *          (实时表upsert + 历史表逐条insert + 设备表查改) ← 冗余!
+         * 链路B每条数据4次同步写事务(含fsync), 1Hz×N台设备时UI线程被
+         * SQLite反复阻塞; 一旦发生告警, 告警insert再与这些写操作竞争
+         * SQLite写锁 → 界面卡死。
+         * 现在只保留链路A(数据源已是服务端数据, 落库无遗漏), 并由
+         * dbbridge.cpp 中的 busy_timeout 兜底写锁竞争。 */
 
         // 连接状态 → 顶栏 LED 变色 + 断线时全部采集点标离线(触发离线告警)
         connect(m_client, &ServerClient::connectedChanged, this, [this](bool on) {
@@ -173,7 +185,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
             m_netLabel->setText(QString("数据源: %1").arg(t));
         });
 
-        m_client->start(settings.value("server/ip", "192.168.1.100").toString(),
+        m_client->start(settings.value("server/ip", "192.168.14.50").toString(),
                         quint16(settings.value("server/port", 8888).toUInt()));
     } else {
         // 模拟链路(原 V3 行为): 定时器 1Hz 产 3 个采集点数据

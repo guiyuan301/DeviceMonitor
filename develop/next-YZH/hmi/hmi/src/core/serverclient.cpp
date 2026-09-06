@@ -1,5 +1,5 @@
 #include "serverclient.h"
-#include <QtEndian>      // qToBigEndian/qFromBigEndian: 主机序↔网络序(大端)转换
+#include <QtEndian>      // qToBigEndian/qFromBigEndian: 主机序?网络序(大端)转换
 #include <QDateTime>
 
 /* 设备负载长度: 时间戳4 + 温度2 + 状态1 + 湿度1 + 产量4 + 保留3 = 15 字节
@@ -147,7 +147,16 @@ quint16 ServerClient::crc16(const quint8 *data, int len)
     return crc;
 }
 
-/* ================= 收包: 缓冲区拆帧 + 字段还原 ================= */
+/* ================= 收包: 缓冲区拆帧 + 字段还原 =================
+ *
+ * 【数据来源】服务端 central_server 的 server_broadcast_to_hmi() 转发的
+ * 采集板 0x01 数据上报包。服务端在转发前已将 DataPayload 多字节字段
+ * (timestamp/temperature/production) 转为大端(网络序)，与本函数的
+ * qFromBigEndian 解析方式完全匹配。
+ *
+ * 【包结构】12字节包头 + 15字节DataPayload(0x01) / 134字节DeviceInfoPayload(0x10)
+ *   包头: [0-1]魔数0x5A5A [2-5]负载长度(大端) [6]类型 [7]版本 [8-9]设备号(大端) [10-11]CRC16
+ *   0x01负载: [0-3]时间戳 [4-5]温度×100 [6]状态 [7]湿度 [8-11]产量 [12-14]保留 */
 
 void ServerClient::onReadyRead()
 {

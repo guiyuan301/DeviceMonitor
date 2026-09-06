@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <arpa/inet.h>   // htonl/htons：服务端→HMI 转发时把 DataPayload 转回网络字节序
 
 /* ============================================================================
  * 一、业务回调函数
@@ -38,6 +39,29 @@
  *    回调在工作线程中执行，不是主线程。
  * ============================================================================ */
 
+/* 【修改点6】字节序转换辅助函数：
+ * protocol_parser.c 的 parse_packet 将采集板发来的大端(网络序)DataPayload
+ * 通过 ntohl/ntohs 转成了主机序(小端)。但 HMI 的 ServerClient 用
+ * qFromBigEndian 解析，期望的是大端字节序。若不转回去，温度/时间戳/产量
+ * 等多字节字段会被 HMI 误读(例如25.36℃ → 594.01℃)。
+ * 以下函数在服务端→HMI 发送前将 DataPayload / DeviceInfoPayload 转回网络序。 */
+static void data_payload_to_network(const DataPayload *host, DataPayload *net) {
+    net->timestamp   = htonl(host->timestamp);
+    net->temperature = htons(host->temperature);
+    net->status      = host->status;          /* 单字节，无需转换 */
+    net->humi        = host->humi;            /* 单字节，无需转换 */
+    net->production  = htonl(host->production);
+    memcpy(net->reserved, host->reserved, 3);
+}
+
+static void device_info_to_network(const DeviceInfoPayload *host, DeviceInfoPayload *net) {
+    net->device_id = htons(host->device_id);  /* 仅 device_id 需转网络序 */
+    memcpy(net->name, host->name, sizeof(net->name));
+    memcpy(net->group_name, host->group_name, sizeof(net->group_name));
+    net->online = host->online;               /* 单字节 */
+    memcpy(net->reserved, host->reserved, 3);
+}
+
 /**
  * @brief 数据上报回调 —— 将采集数据写入数据库并转发给HMI
  * @param conn  当前连接上下文（含 device_id、IP 等）
@@ -47,22 +71,30 @@
  * 注意：本函数在工作线程中执行，多线程并发调用时依赖 database_manager 内部的互斥锁。
  */
 static void on_data_received(ClientConnection *conn, DataPayload *data) {
-    // 打印日志，方便调试（temperature 单位是 ×100，除以100还原为实际℃）
+    /* 【修改点4】数据上报回调：入库 + 转发HMI 的完整数据流。
+     * 数据流：采集板 TCP→ central_server epoll recv → protocol_parser 解析
+     *        → thread_pool 入队 → worker_thread 取出 → 本函数
+     *        → dm_insert_measurement 写入 SQLite(历史表+实时表+告警判定)
+     *        → server_broadcast_to_hmi 转发给所有已注册的HMI看板客户端
+     * HMI 收到后由 ServerClient 解析 → emit deviceData → DataManager::onDeviceData → 刷新UI */
     printf("[DATA] 设备[%d] 温度:%.2f℃ 湿度:%d%% 状态:%s 产量:%d 时间:%u\n",
            conn->device_id,
            data->temperature / 100.0,
-		   data->humi,   //打印湿度
+	   data->humi,   //打印湿度
            data->status ? "运行" : "停机",
            data->production,
            data->timestamp);
 
-    // 调用数据库接口，将数据写入历史表、实时表，并跑告警判定
+    // 步骤1：将采集数据写入服务器数据库（历史表 + 实时表 + 告警引擎判定）
     if (dm_insert_measurement(conn->device_id, data) != 0) {
         fprintf(stderr, "[WARN] 设备[%d] 数据入库失败\n", conn->device_id);
     }
-    
-    // 转发实时数据给所有HMI看板客户端（携带设备号，HMI据此识别设备）
-    server_broadcast_to_hmi(0x01, conn->device_id, data, sizeof(DataPayload));
+
+    // 步骤2：将实时数据转发给所有已注册的HMI看板客户端
+    // 【修改点6续】data 是主机序，HMI 期望大端(网络序)，需先转换再发送
+    DataPayload net_data;
+    data_payload_to_network(data, &net_data);
+    server_broadcast_to_hmi(0x01, conn->device_id, &net_data, sizeof(net_data));
 }
 
 /**
@@ -81,7 +113,7 @@ static void push_device_info(const device_info_t *dev, void *ud) {
     info.device_id = dev->device_id;
     strncpy(info.name, dev->name, sizeof(info.name) - 1);
     strncpy(info.group_name, dev->group_name, sizeof(info.group_name) - 1);
-    
+
     // 查询设备在线状态
     sensor_sample_t s;
     if (dm_query_realtime(dev->device_id, &s) == 0) {
@@ -89,8 +121,11 @@ static void push_device_info(const device_info_t *dev, void *ud) {
     } else {
         info.online = 0;
     }
-    
-    server_send_to_hmi(hmi, 0x10, dev->device_id, &info, sizeof(info));
+
+    /* 【修改点6续】转网络序再发，HMI 用 qFromBigEndian 解析 device_id */
+    DeviceInfoPayload net_info;
+    device_info_to_network(&info, &net_info);
+    server_send_to_hmi(hmi, 0x10, dev->device_id, &net_info, sizeof(net_info));
 }
 
 // HMI实时数据推送回调
@@ -103,28 +138,34 @@ static void push_realtime_data(const sensor_sample_t *sample, void *ud) {
     data.humi = (uint8_t)sample->humidity;
     data.status = sample->run_status;
     data.production = (int32_t)sample->output_count;
-    
-    server_send_to_hmi(hmi, 0x01, sample->device_id, &data, sizeof(data));
+
+    /* 【修改点6续】转网络序再发，与 on_data_received 保持一致 */
+    DataPayload net_data;
+    data_payload_to_network(&data, &net_data);
+    server_send_to_hmi(hmi, 0x01, sample->device_id, &net_data, sizeof(net_data));
 }
 
 static void on_device_online(ClientConnection *conn) {
-    printf("[ONLINE] 设备[%d] 上线 (ip=%s:%d)\n", 
+    printf("[ONLINE] 设备[%d] 上线 (ip=%s:%d)\n",
            conn->device_id, conn->ip, conn->port);
-    
-    // HMI看板客户端注册：推送数据库中的设备列表和实时数据
+
+    /* 【修改点5】HMI看板客户端注册时：推送数据库中的设备列表和实时数据。
+     * HMI 不是采集设备，不应在 devices 表中注册(原代码会以 device_id=65535
+     * 注册一条假设备记录，污染设备列表)。现对 is_hmi 连接跳过设备状态更新。 */
     if (conn->is_hmi) {
         printf("[HMI] 开始向HMI推送设备数据...\n");
-        
-        // 推送所有设备信息
+
+        // 推送所有设备信息(0x10包)：让HMI知道服务端管理了哪些采集板
         dm_foreach_devices(push_device_info, conn);
-        
-        // 推送所有设备的实时数据
+
+        // 推送所有设备的实时数据(0x01包)：让HMI立即显示当前值
         dm_foreach_realtime(push_realtime_data, conn);
-        
+
         printf("[HMI] 设备数据推送完成\n");
+        return;   /* HMI不是采集设备，跳过下方 dm_update_device_status */
     }
-    
-    dm_update_device_status(conn->device_id, 1); // 1 = 在线
+
+    dm_update_device_status(conn->device_id, 1); // 1 = 在线(仅采集板)
 }
 
 /**
@@ -137,7 +178,10 @@ static void on_device_online(ClientConnection *conn) {
 static void on_device_offline(ClientConnection *conn) {
     printf("[OFFLINE] 设备[%d] 离线 (ip=%s:%d)\n",
            conn->device_id, conn->ip, conn->port);
-    dm_update_device_status(conn->device_id, 0); // 0 = 离线
+    /* 【修改点5续】HMI 看板断开不更新采集设备状态(同 on_device_online) */
+    if (conn->is_hmi)
+        return;
+    dm_update_device_status(conn->device_id, 0); // 0 = 离线(仅采集板)
 }
 
 /**

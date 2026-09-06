@@ -51,6 +51,8 @@ public slots:
     void onDeviceData(const DeviceData &data);
     // 服务端心跳超时/恢复时调用
     void setDeviceOnline(int id, bool on);
+    // 【修改点7】接收服务端推送的设备信息(0x10包)，更新设备名/分组/在线状态
+    void onDeviceInfoReceived(int deviceId, const QString &name, const QString &group, bool online);
     // 抓拍图落盘后调用 (reason: "抽检·第N件"/"告警留档"/"手动")
     void addSnapshot(int deviceId, const QString &jpegPath, const QString &reason);
     // 消音: deviceId<0 表示全部; 持续 seconds 秒

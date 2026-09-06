@@ -69,7 +69,6 @@ ClientConnection* server_find_by_device_id(uint16_t device_id);
 // 断开指定连接
 void server_disconnect_client(int fd);
 
-<<<<<<< HEAD
 // 向指定HMI客户端发送数据包（device_id 写入包头，HMI据此识别设备）
 int server_send_to_hmi(ClientConnection *hmi, uint8_t type, uint16_t device_id, const void *payload, uint16_t payload_len);
 
@@ -77,6 +76,3 @@ int server_send_to_hmi(ClientConnection *hmi, uint8_t type, uint16_t device_id, 
 void server_broadcast_to_hmi(uint8_t type, uint16_t device_id, const void *payload, uint16_t payload_len);
 
 #endif
-=======
-#endif
->>>>>>> 3948bc43b421bc6fbc4a624038aed8da389f2b5e

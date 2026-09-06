@@ -34,6 +34,12 @@ bool DbBridge::open(const QString &dbFile)
     sqlite3_exec(db_handle(), "PRAGMA cache_size = -512;", nullptr, nullptr, nullptr);
 #endif
 
+    /* 【修改点10-性能修复】写锁竞争兜底:
+     * 默认 busy_timeout=0, 任何写锁冲突立刻返回 SQLITE_BUSY → 告警insert
+     * 静默失败。设为 2 秒: 冲突时自动等待重试, UI 最多停顿 2s 且不丢数据。
+     * (storage.c 已开启 WAL 模式, 读写不互斥, 这里防的是写-写竞争) */
+    sqlite3_exec(db_handle(), "PRAGMA busy_timeout = 2000;", nullptr, nullptr, nullptr);
+
     migrate();
     registerDevices();
     seedFromDb();
@@ -325,12 +331,17 @@ QVector<Sample> DbBridge::queryHistory(int deviceId, qint64 fromMs, qint64 toMs)
 
 // ---------------- 从服务端接收数据并写入 ----------------
 
+/* 【修改点10-性能修复续】本函数已不再被 mainwindow.cpp 连接(防重复落库),
+ * 保留但轻量化, 防止将来误接后再次拖垮UI:
+ *  - 历史表不再逐条 insert(每条一次fsync), 改入 m_batch 由 3s 定时器攒批提交;
+ *  - 删除每条数据的设备表 get/update(设备注册/更新由 open() 时的
+ *    registerDevices 和 onDeviceInfoReceived 负责, 无需每秒重写)。 */
 void DbBridge::onRealtimeDataReceived(const DeviceData &data)
 {
     if (!m_open || data.id <= 0)
         return;
 
-    // 写入实时表
+    // 实时表 UPSERT: 单行覆盖写, 开销小
     sensor_sample_t s;
     memset(&s, 0, sizeof(s));
     s.device_id = data.id;
@@ -341,28 +352,21 @@ void DbBridge::onRealtimeDataReceived(const DeviceData &data)
     s.sample_ts = data.ts / 1000;
     db_realtime_upsert(&s);
 
-    // 写入历史表
+    // 历史表: 在线才落, 攒批提交(与 onDeviceUpdated 同策略)
     if (data.online) {
-        db_history_insert(&s);
+        m_batch.append(s);
+        if (m_batch.size() > 600)
+            flush();
     }
-    
-    // 更新设备在线状态
-    device_info_t dev;
-    memset(&dev, 0, sizeof(dev));
-    dev.device_id = data.id;
-    snprintf(dev.name, sizeof(dev.name), "Device_%d", data.id);
-    strncpy(dev.group_name, "车间", sizeof(dev.group_name) - 1);
-    dev.registered_at = time(NULL);
-    
-    device_info_t got;
-    if (db_device_get(data.id, &got) == DB_OK)
-        db_device_update(&dev);
-    else
-        db_device_insert(&dev);
 }
 
 void DbBridge::onDeviceInfoReceived(int deviceId, const QString &name, const QString &group, bool online)
 {
+    /* online 参数不落库: 设备在线状态由服务端按 TCP 连接实时判定并随每条
+     * 数据推送(0x01 包的 online 位), 本地 devices 表只存注册信息(名称/分组)。
+     * 显式标记未使用, 消除 -Wunused-parameter 警告。 */
+    Q_UNUSED(online);
+
     if (!m_open || deviceId <= 0)
         return;
 

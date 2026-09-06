@@ -15,6 +15,17 @@ msvc {
     QMAKE_CXXFLAGS += /utf-8
 }
 
+# ---------------------------------------------------------------
+# GCC(Linux/ARM交叉编译): 源码统一为UTF-8编码, 显式指定输入/执行字符集
+# 防止 QStringLiteral("中文") 在编译时报错:
+#   "converting to execution character set: Invalid or incomplete
+#    multibyte or wide character"
+# 同时防止以后混入GBK编码文件时出现隐式乱码(直接报错便于发现)
+unix:!macx {
+    QMAKE_CFLAGS   += -finput-charset=UTF-8 -fexec-charset=UTF-8
+    QMAKE_CXXFLAGS += -finput-charset=UTF-8 -fexec-charset=UTF-8
+}
+
 # 成员D数据库模块(XS_/db)为纯C代码, 需要 C99(for内声明变量)
 CONFIG += c99
 

@@ -2,6 +2,7 @@
 #include <QDateTime>
 #include <QTimer>
 #include <algorithm>
+#include <cstdio>   // printf, for dynamic device registration logging
 
 DataManager &DataManager::instance()
 {
@@ -127,8 +128,17 @@ bool DataManager::buzzerMuted(int deviceId) const
 
 void DataManager::onDeviceData(const DeviceData &data)
 {
-    if (!m_devices.contains(data.id))
-        return;
+    /* 【修改点1】动态注册未知设备：
+     * 原代码在此处直接 return，导致服务端转发的采集板数据(如 device_id=1001)
+     * 因不在 HMI 预注册的设备列表(1/2/3)中而被丢弃，实时数据无法显示。
+     * 现改为：收到未知设备数据时自动注册，使任意 device_id 的采集板都能上屏。 */
+    if (!m_devices.contains(data.id)) {
+        DeviceData reg = data;
+        reg.name = QString("设备%1").arg(data.id);  // 自动命名，可通过设备信息包覆盖
+        m_devices.insert(data.id, reg);
+        m_history.insert(data.id, QVector<Sample>());
+        printf("[DataManager] 动态注册新设备 id=%d\n", data.id);
+    }
 
     const DeviceData prev = m_devices.value(data.id);
     DeviceData d = data;
@@ -174,14 +184,45 @@ void DataManager::onDeviceData(const DeviceData &data)
 
 void DataManager::setDeviceOnline(int id, bool on)
 {
-    if (!m_devices.contains(id))
-        return;
+    /* 【修改点2】对未知设备也允许设置在线状态(与动态注册配合)。
+     * 原代码直接 return，会导致服务端断线时无法将动态注册的设备标为离线。 */
+    if (!m_devices.contains(id)) {
+        DeviceData reg;
+        reg.id = id;
+        reg.name = QString("设备%1").arg(id);
+        m_devices.insert(id, reg);
+        m_history.insert(id, QVector<Sample>());
+    }
     DeviceData d = m_devices.value(id);
     if (d.online == on)
         return;
     d.online = on;
     d.ts = QDateTime::currentMSecsSinceEpoch();
     onDeviceData(d);
+}
+
+/* 【修改点7】接收服务端推送的设备信息(0x10包)。
+ * 服务端在 HMI 注册时遍历数据库 devices 表，把每台采集板的
+ * device_id / name / group / online 推过来。HMI 据此更新内存设备列表
+ * (覆盖动态注册时的自动命名"设备NNNN")。 */
+void DataManager::onDeviceInfoReceived(int deviceId, const QString &name, const QString &group, bool online)
+{
+    Q_UNUSED(group);   // DeviceData 暂无 group 字段，保留接口供后续扩展
+    if (!m_devices.contains(deviceId)) {
+        DeviceData d;
+        d.id = deviceId;
+        d.name = name;
+        d.online = online;
+        m_devices.insert(deviceId, d);
+        m_history.insert(deviceId, QVector<Sample>());
+    } else {
+        DeviceData d = m_devices.value(deviceId);
+        if (!name.isEmpty())
+            d.name = name;
+        d.online = online;
+        m_devices[deviceId] = d;
+    }
+    emit deviceUpdated(deviceId);
 }
 
 void DataManager::addSnapshot(int deviceId, const QString &jpegPath, const QString &reason)
