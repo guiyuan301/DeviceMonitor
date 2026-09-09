@@ -208,7 +208,11 @@ void ServerClient::processBuffer()
             d.humi = payload[7];                                            // 湿度整数%
             d.output = qFromBigEndian<quint32>(payload + 8);                // 累计产量
             d.online = true;
-            d.ts = QDateTime::currentMSecsSinceEpoch();  // 用本机毫秒时间, 与历史曲线对齐
+            /* 【修改点9】用采集板传来的时间戳, 而不是 HMI 本机时间。
+             * payload[0-3] 是采集板 Unix 秒时间戳, 转成毫秒(与 HMI 内部毫秒契约一致)。
+             * 这样 HMI 显示/落库的时间 = 采集板实际采样时间, 不依赖 HMI 时钟。 */
+            quint32 sec_ts = qFromBigEndian<quint32>(payload);
+            d.ts = (qint64)sec_ts * 1000LL;
             emit deviceData(d);
             emit realtimeDataReceived(d);
         } else if (type == 0x10 && int(payloadLen) >= 131) {
@@ -231,7 +235,9 @@ void ServerClient::processBuffer()
             d.humi = payload[7];
             d.output = qFromBigEndian<quint32>(payload + 8);
             d.online = true;
-            d.ts = QDateTime::currentMSecsSinceEpoch();
+            /* 【修改点9续】同0x01帧: 用采集板时间戳 */
+            quint32 sec_ts = qFromBigEndian<quint32>(payload);
+            d.ts = (qint64)sec_ts * 1000LL;
             emit deviceData(d);
             emit realtimeDataReceived(d);
         }

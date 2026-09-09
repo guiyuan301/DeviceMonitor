@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>   // htonl/htons：服务端→HMI 转发时把 DataPayload 转回网络字节序
+#include <time.h>        // localtime_r / strftime：格式化时间戳
+#include "../include/storage.h"  // db_realtime_get：底层无锁查询（修复死锁用）
 
 /* ============================================================================
  * 一、业务回调函数
@@ -77,13 +79,22 @@ static void on_data_received(ClientConnection *conn, DataPayload *data) {
      *        → dm_insert_measurement 写入 SQLite(历史表+实时表+告警判定)
      *        → server_broadcast_to_hmi 转发给所有已注册的HMI看板客户端
      * HMI 收到后由 ServerClient 解析 → emit deviceData → DataManager::onDeviceData → 刷新UI */
-    printf("[DATA] 设备[%d] 温度:%.2f℃ 湿度:%d%% 状态:%s 产量:%d 时间:%u\n",
+    /* 【修改点7】时间戳格式化：把采集板传来的 Unix 秒数转成可读字符串。
+     * 之前直接打印 %u 裸秒数(如 1788922768), 现在转成 YYYY-MM-DD HH:MM:SS。
+     * 用 localtime_r(线程安全) + strftime, 与采集板本地时区一致。 */
+    time_t ts = (time_t)data->timestamp;
+    struct tm tm_buf;
+    localtime_r(&ts, &tm_buf);
+    char time_str[32];
+    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", &tm_buf);
+
+    printf("[DATA] 设备[%d] 温度:%.2f℃ 湿度:%d%% 状态:%s 产量:%d 时间:%s\n",
            conn->device_id,
            data->temperature / 100.0,
 	   data->humi,   //打印湿度
            data->status ? "运行" : "停机",
            data->production,
-           data->timestamp);
+           time_str);
 
     // 步骤1：将采集数据写入服务器数据库（历史表 + 实时表 + 告警引擎判定）
     if (dm_insert_measurement(conn->device_id, data) != 0) {
@@ -115,8 +126,11 @@ static void push_device_info(const device_info_t *dev, void *ud) {
     strncpy(info.group_name, dev->group_name, sizeof(info.group_name) - 1);
 
     // 查询设备在线状态
+    // 【修改点8】死锁修复: dm_foreach_devices 已经持有 g_db_mutex, 再调 dm_query_realtime
+    // 会再次 lock 同一互斥锁(非递归) → 永久阻塞。改为直接调底层 db_realtime_get(无锁),
+    // 因为外层已持锁, 数据库访问仍是安全的。
     sensor_sample_t s;
-    if (dm_query_realtime(dev->device_id, &s) == 0) {
+    if (db_realtime_get(dev->device_id, &s) == DB_OK) {
         info.online = 1;
     } else {
         info.online = 0;

@@ -4,18 +4,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>        // localtime_r / strftime：格式化时间戳
 
 /* ========== 回调函数实现（示例） ========== */
 
 // 收到数据上报
 static void on_data_received(ClientConnection *conn, DataPayload *data) {
-    printf("[DATA] 设备[%d] 温度:%.2f℃ 湿度:%d%% 状态:%s 产量:%d 时间:%u\n",
+    /* 【修改点7】时间戳格式化：Unix 秒 → YYYY-MM-DD HH:MM:SS */
+    time_t ts = (time_t)data->timestamp;
+    struct tm tm_buf;
+    localtime_r(&ts, &tm_buf);
+    char time_str[32];
+    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", &tm_buf);
+
+    printf("[DATA] 设备[%d] 温度:%.2f℃ 湿度:%d%% 状态:%s 产量:%d 时间:%s\n",
            conn->device_id,
            data->temperature / 100.0,
 		   data->humi,   //打印湿度
            data->status ? "运行" : "停机",
            data->production,
-           data->timestamp);
+           time_str);
 
     // 【核心修改】调用约定的数据入库接口
     if (db_insert_measurement(conn->device_id, data) != 0) {
