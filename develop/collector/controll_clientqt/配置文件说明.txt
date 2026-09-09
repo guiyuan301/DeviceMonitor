@@ -1,0 +1,3 @@
+1.将生成的可执行程序collector和collector.conf这两个文件放在同一个目录下
+2.将QT交叉编译生成的可执行程序放在/usr/local/qt_app/下
+3.执行：sudo /usr/local/qt-app/run_myapp.sh /usr/local/qt-app/control_client
