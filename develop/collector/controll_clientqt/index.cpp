@@ -9,6 +9,7 @@
 #include <QProgressDialog>
 #include <QFileInfo>
 #include <QProcess>
+#include <QDir>
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -576,6 +577,26 @@ void Index::startCollectorLocally()
         return;
     }
 
+    // 检查工作目录是否存在
+    QDir workDir(m_collectorWorkDir);
+    if (!workDir.exists()) {
+        addLog("[错误] 工作目录不存在: " + m_collectorWorkDir);
+        addLog("[提示] 请确认 NFS 挂载点是否正确");
+        return;
+    }
+
+    // 检查 collector.conf 是否在工作目录中（collector 使用相对路径 ./collector.conf）
+    QString confPath = m_collectorWorkDir + "/collector.conf";
+    if (!QFile::exists(confPath)) {
+        addLog("[错误] 配置文件不存在: " + confPath);
+        addLog("[提示] collector 读取 ./collector.conf，需将其放到工作目录");
+        addLog(QString("[提示] 执行: cp collector.conf %1/").arg(m_collectorWorkDir));
+        QMessageBox::warning(this, "配置缺失",
+            QString("工作目录 %1 下缺少 collector.conf，collector 将无法启动。\n请先复制配置文件到该目录。")
+                .arg(m_collectorWorkDir));
+        return;
+    }
+
     // 如果已有进程在运行，先停止
     if (m_process && m_process->state() == QProcess::Running) {
         addLog("collector 已在运行，先停止...");
@@ -622,8 +643,13 @@ void Index::startCollectorLocally()
 
     m_process->setWorkingDirectory(m_collectorWorkDir);
 
+    // 传递配置文件绝对路径作为参数，避免相对路径歧义
+    QString confArg = m_collectorWorkDir + "/collector.conf";
+    QStringList args;
+    args << confArg;
+
     addLog("正在启动 collector...");
-    m_process->start(m_collectorPath, QStringList());
+    m_process->start(m_collectorPath, args);
 
     // ================================================================
     // 完全非阻塞：启动定时器检查进程是否启动成功
@@ -800,25 +826,14 @@ void Index::onStopDevice()
         m_process->terminate();
     }
 
-    // 使用非阻塞方式等待进程结束
-    if (!m_process->waitForFinished(5000)) {
-        addLog("进程未响应，强制终止...");
-        m_process->kill();
-        m_process->waitForFinished(1000);
-    }
-
-    if (m_process && m_process->state() == QProcess::NotRunning) {
-        addLog("collector 进程已停止，GPIO 资源已释放");
-        m_isDeviceConnected = false;
-        updateDeviceStatus(false);
-        m_stopDeviceBtn->setEnabled(false);
-        m_startDeviceBtn->setEnabled(true);
-        m_process->deleteLater();
-        m_process = nullptr;
-    }
-
-    m_isStoppingDevice = false;
-    m_stopDeviceBtn->setText("停止");
+    // 非阻塞方式：依赖 finished 信号（onProcessFinished）完成清理
+    // 设置5秒兜底定时器，超时则强杀进程
+    QTimer::singleShot(5000, this, [this]() {
+        if (m_process && m_process->state() == QProcess::Running) {
+            addLog("进程未响应 SIGINT，强制终止...");
+            m_process->kill();
+        }
+    });
 }
 
 // ============================================================================
@@ -1042,10 +1057,14 @@ void Index::onProcessFinished(int exitCode, QProcess::ExitStatus status)
         m_progressDialog = nullptr;
     }
 
+    // 防重复：若 m_process 已被清理则直接返回
+    if (!m_process) return;
+
     if (exitCode == 0) {
         addLog("collector 进程正常退出（GPIO 资源已释放）");
     } else {
         addLog(QString("collector 进程退出，退出码: %1").arg(exitCode));
+        addLog("[提示] 若退出码非0，请查看上方 [collector] 日志输出");
     }
 
     m_isDeviceConnected = false;
@@ -1072,10 +1091,13 @@ void Index::onProcessError(QProcess::ProcessError error)
         m_progressDialog = nullptr;
     }
 
+    // 防重复：若 m_process 已被清理则直接返回
+    if (!m_process) return;
+
     QString errorMsg;
     switch(error) {
         case QProcess::FailedToStart:
-            errorMsg = "进程启动失败";
+            errorMsg = "进程启动失败（程序不存在/无执行权限/工作目录不存在）";
             break;
         case QProcess::Crashed:
             errorMsg = "进程崩溃";

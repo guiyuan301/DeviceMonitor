@@ -720,16 +720,18 @@ void hardware_deinit(void)
     gpio_unexport(g_gpio_cnt_product);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
     pthread_t tid_producer;
     pthread_t tid_consumer;
-    
+
     // 注册Ctrl+C信号处理，实现可控优雅退出
     signal(SIGINT, sig_handler);
-    
-    // 加载外部配置文件，无配置文件直接退出
-    if(load_config_file("./collector.conf") != 0)
+
+    // 加载外部配置文件：
+    // 优先使用命令行参数指定的配置文件路径，否则默认读取 ./collector.conf
+    const char *conf_path = (argc >= 2) ? argv[1] : "./collector.conf";
+    if(load_config_file(conf_path) != 0)
     {
         return -1;
     }

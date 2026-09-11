@@ -22,6 +22,7 @@
 #include <QProcess>
 #include <QProgressDialog>
 #include <QInputDialog>
+#include <QDir>
 
 // ============================================================================
 // 通信协议定义
