@@ -1,6 +1,6 @@
 CC=arm-linux-gnueabihf-gcc
 #CC=gcc
-OBJ=main.o gpio.o dht11.o
+OBJ=main.o gpio.o dht11.o pwm.o
 TARGET=collector
 
 all: $(TARGET)

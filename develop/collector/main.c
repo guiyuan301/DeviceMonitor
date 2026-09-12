@@ -40,6 +40,7 @@
 #include <sys/select.h>    /* 【修改点】添加 select 头文件 */
 #include "gpio.h"
 #include "dht11.h"
+#include "pwm.h"
 
 /*********************************************************************************
  * 全局配置变量：全部由 collector.conf 配置文件赋值
@@ -54,8 +55,13 @@ int     g_ring_buf_size;        // 线程安全环形缓冲区大小，缓存采
 uint16_t g_device_id;           // 采集设备ID，上报协议中用于区分不同采集板
 char    g_server_ip[32];        // TCP服务端IP地址字符串，最大31字节
 int     g_server_port;          // TCP服务端监听端口号
+int     g_pwm_servo_chip;       // 舵机PWM组号(从1开始,填3对应pwmchip2)
+int     g_pwm_servo_duty;       // 舵机运行转速脉宽(纳秒)：360度舵机2500000=全速顺转,500000=全速逆转
+int     g_pwm_servo_stop_duty;  // 舵机停转中点脉宽(纳秒)：360度舵机固定1500000
 
 static int g_run_flag = 1;      // 全局程序退出标志，0代表退出
+
+static int g_servo_inited = 0;  // 舵机PWM是否初始化成功
 
 /* ============================================================================
  * 【修改点1】添加控制协议结构体定义 - 用于接收远程控制指令
@@ -282,6 +288,12 @@ int load_config_file(const char *conf_path)
             g_server_ip[sizeof(g_server_ip)-1] = '\0'; parse_ok=1;
         }else if(strcmp(key,"SERVER_PORT") == 0){
             g_server_port = atoi(val); parse_ok=1;
+        }else if(strcmp(key,"PWM_SERVO_CHIP") == 0){
+            g_pwm_servo_chip = atoi(val); parse_ok=1;
+        }else if(strcmp(key,"PWM_SERVO_DUTY") == 0){
+            g_pwm_servo_duty = atoi(val); parse_ok=1;
+        }else if(strcmp(key,"PWM_SERVO_STOP_DUTY") == 0){
+            g_pwm_servo_stop_duty = atoi(val); parse_ok=1;
         }
     }
     fclose(fp);
@@ -296,6 +308,9 @@ int load_config_file(const char *conf_path)
             g_gpio_run_status,g_gpio_cnt_product,g_gpio_buzzer);
     printf("[配置] TEMP_THRESHOLD=%d, SERVER_IP=[%s] PORT=%d DEV_ID=%d\n",
             g_temp_threshold,g_server_ip,g_server_port,g_device_id);
+    printf("[配置] PWM_SERVO_CHIP=%d(对应pwmchip%d), 运行脉宽=%dns, 停转中点=%dns\n",
+            g_pwm_servo_chip, g_pwm_servo_chip - 1,
+            g_pwm_servo_duty, g_pwm_servo_stop_duty);
     return 0;
 }
 
@@ -368,12 +383,14 @@ void *producer_thread(void *arg)
     // 保存上一次DHT11有效值，读取失败时复用，静态变量只初始化一次
     static uint8_t last_temp = 25;
     static uint8_t last_humi = 40;
+    // 上一次舵机状态：-1=尚未与硬件同步，0=停止，1=运行（边沿触发，避免每秒重复写sysfs）
+    static int last_servo_state = -1;
     while(g_run_flag)
     {
         CollectData_t data;
         memset(&data,0,sizeof(data));
         data.timestamp = time(NULL); // 获取当前时间戳
-        
+
         //====================真实硬件采集====================
         //1.读取设备运行状态，杜邦线短接GND=运行
         int run_val = gpio_read_debounce(g_gpio_run_status,20);
@@ -385,6 +402,33 @@ void *producer_thread(void *arg)
         else
         {
             data.dev_run = 0;
+        }
+
+        //====================360度舵机跟随设备运行状态====================
+        //设备运行(run_val==0,短接GND)→输出转速脉宽旋转；设备停机→输出1.5ms中点停转
+        //仅在GPIO读取成功且状态发生变化时操作PWM（边沿触发）
+        if(g_servo_inited && run_val != -1)
+        {
+            int dev_run = (run_val == 0) ? 1 : 0;
+            if(dev_run != last_servo_state)
+            {
+                if(dev_run)
+                {
+                    printf("[舵机]设备运行 -> 舵机旋转(duty=%dns)\n", g_pwm_servo_duty);
+                    if(servo_start((uint32_t)g_pwm_servo_duty) == 0)
+                    {
+                        last_servo_state = 1;
+                    }
+                }
+                else
+                {
+                    printf("[舵机]设备停机 -> 舵机停止(0,1.5ms中点)\n");
+                    if(servo_stop((uint32_t)g_pwm_servo_stop_duty) == 0)
+                    {
+                        last_servo_state = 0;
+                    }
+                }
+            }
         }
         //2.E18-D80NK红外传感器：瞬时状态，检测物体=1，无物体=0
         int cnt_val = gpio_read_debounce(g_gpio_cnt_product,20);
@@ -752,34 +796,67 @@ int main(int argc, char *argv[])
     
     // 初始化GPIO硬件
     hardware_init();
-    
+
+    // 初始化舵机PWM（组号/转速脉宽/停转中点由collector.conf配置）
+    if(g_pwm_servo_chip > 0 && g_pwm_servo_duty > 0 && g_pwm_servo_stop_duty > 0)
+    {
+        if(servo_init(g_pwm_servo_chip) == 0)
+        {
+            g_servo_inited = 1;
+            //360度连续旋转舵机：运行脉宽若等于停转中点(1.5ms)则不会转动
+            if(g_pwm_servo_duty == g_pwm_servo_stop_duty)
+            {
+                printf("[警告]PWM_SERVO_DUTY(%d)等于停转中点(%d)，360度舵机不会旋转！\n",
+                       g_pwm_servo_duty, g_pwm_servo_stop_duty);
+                printf("[警告]运行脉宽请改为: 2500000全速顺转 / 500000全速逆转 / 2000000或1000000慢速\n");
+            }
+        }
+        else
+        {
+            printf("[警告]舵机PWM初始化失败，舵机联动不可用（检查PWM_SERVO_CHIP配置）\n");
+        }
+    }
+    else
+    {
+        printf("[提示]未配置PWM_SERVO_CHIP/PWM_SERVO_DUTY/PWM_SERVO_STOP_DUTY，舵机控制不可用\n");
+    }
+
     printf("========采集板程序启动========\n");
     printf("提示：杜邦线短接GPIO%d与GND =设备运行；拔掉=停机\n",g_gpio_run_status);
     printf("提示：按下 Ctrl+C 安全退出程序\n");
     printf("[控制] 已启用远程控制功能，等待服务端下发指令\n");
+    printf("[舵机] 360度连续旋转舵机跟随设备运行状态：\n");
+    printf("       短接GPIO%d到GND=运行(旋转%dns)，断开=停止(中点%dns)\n",
+           g_gpio_run_status, g_pwm_servo_duty, g_pwm_servo_stop_duty);
     
     // 创建采集生产者线程、TCP上传消费者线程
     pthread_create(&tid_producer,NULL,producer_thread,NULL);
     pthread_create(&tid_consumer,NULL,consumer_thread,NULL);
     
-    // 主线程原地循环等待
+    // 主线程原地循环等待（舵机由producer线程跟随设备运行状态控制）
     while(g_run_flag)
     {
         sleep(1);
     }
-    
+
     // 等待两个子线程安全结束
     pthread_join(tid_producer,NULL);
     pthread_join(tid_consumer,NULL);
-    
+
     // 销毁锁与条件变量
     pthread_mutex_destroy(&g_buf_mutex);
     pthread_cond_destroy(&g_buf_cond);
-    
+
     // 释放环形缓冲区堆内存
     free(g_ring_buf);
     g_ring_buf = NULL;
-    
+
+    // 释放舵机PWM资源（先于GPIO释放）
+    if(g_servo_inited)
+    {
+        servo_deinit();
+    }
+
     // 释放GPIO硬件资源
     hardware_deinit();
     

@@ -2,3 +2,10 @@
 2.将QT交叉编译生成的可执行程序放在/usr/local/qt_app/下
 3.执行：sudo /usr/local/qt-app/run_myapp.sh /usr/local/qt-app/control_client
 4.检查collector和collector.conf这俩文件的权限
+5.SG90-360连续旋转舵机配置在collector.conf中(周期固定20ms/50Hz)：
+  PWM_SERVO_CHIP=3          PWM组号(从1开始,填3对应/sys/class/pwm/pwmchip2)，按实际接线修改
+  PWM_SERVO_DUTY=2500000    运行转速脉宽: 500000全速逆转/1000000慢逆/2000000慢顺/2500000全速顺转
+                            (严禁填1500000,那是停转中点,舵机不会转)
+  PWM_SERVO_STOP_DUTY=1500000 停转中点脉宽固定1500000(1.5ms)主动刹停
+  舵机自动跟随设备运行状态(GPIO_RUN_STATUS)：杜邦线短接GND=设备运行=舵机旋转，
+  拔掉=设备停机=输出1.5ms中点停转，无需QT界面按钮控制
